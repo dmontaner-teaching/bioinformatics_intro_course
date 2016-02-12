@@ -1,0 +1,257 @@
+
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #! /usr/local/bin/Rscript --vanilla
+> 
+> ##z_make_r_code.r
+> ##2014-03-31 dmontaner@cipf.es
+> ##Runs spin using knitr
+> 
+> ## NOTE: the scripts are executed one after the other one.
+> ##       The environment is not cleaned up.
+> ##       The q() command at the end of the scripts ends the process.
+> 
+> ## NOTE: spin does not stop with errors 
+> 
+> date ()
+[1] "Mon May 25 13:19:08 2015"
+> Sys.info ()[c("nodename", "user")]
+   nodename        user 
+      "lap" "dmontaner" 
+> commandArgs ()
+[1] "/usr/lib/R/bin/exec/R"                                                                                                                          
+[2] "-f"                                                                                                                                             
+[3] "/home/dmontaner/Documents/UV_master/mis_cursos/NOCIONES_BASICAS_2014_2015/clases_preparacion/2015_05_25_gene_ontology_propagate/z_make_r_code.r"
+[4] "--restore"                                                                                                                                      
+[5] "--save"                                                                                                                                         
+[6] "--no-readline"                                                                                                                                  
+[7] "--no-save"                                                                                                                                      
+[8] "--no-restore"                                                                                                                                   
+> rm (list = ls ())
+> R.version.string ##"R version 3.0.2 (2013-09-25)"
+[1] "R version 3.2.0 (2015-04-16)"
+> library (knitr); packageDescription ("knitr", fields = "Version") #"1.5"
+[1] "1.10.5"
+> ##help (package = knitr)
+> 
+> opts_chunk$set (comment = ">")   ## symbol preceding the R output
+> 
+> 
+> ### FILES TO COMPILE:
+> setwd ("/home/dmontaner/Documents/UV_master/mis_cursos/NOCIONES_BASICAS_2014_2015/clases_preparacion/2015_05_25_gene_ontology_propagate")
+> dir ()
+[1] "datos"                         "download_amigo_annotation.mp4"
+[3] "propagate_gene_ontology.html"  "propagate_gene_ontology.r"    
+[5] "z_make_r_code.r"               "z_make_r_code.r.Rout"         
+> 
+> bases <- c ("propagate_gene_ontology") ## File names WITHOUT extension
+> 
+> for (base in bases) {
++     print (base)
++     rm (list = setdiff (ls (), c("base", "bases")))  
++     unlink (paste0 (base, ".html"))
++     spin   (paste0 (base, ".r"), doc = "^##+'[ ]?")  ## double has plus quote instead of single has plus quote is used to indicate md/text chunks (as in roxygen doc. using emacs)
++     unlink (paste0 (base, ".md"))
++     unlink (paste0 (base, ".Rmd"))
++ }
+[1] "propagate_gene_ontology"
+
+
+processing file: propagate_gene_ontology.Rmd
+  |                                                                         |                                                                 |   0%  |                                                                         |.                                                                |   2%
+  ordinary text without R code
+
+  |                                                                         |..                                                               |   4%
+label: unnamed-chunk-1
+  |                                                                         |....                                                             |   5%
+  ordinary text without R code
+
+  |                                                                         |.....                                                            |   7%
+label: unnamed-chunk-2
+  |                                                                         |......                                                           |   9%
+  ordinary text without R code
+
+  |                                                                         |.......                                                          |  11%
+label: unnamed-chunk-3
+  |                                                                         |........                                                         |  13%
+  ordinary text without R code
+
+  |                                                                         |.........                                                        |  15%
+label: unnamed-chunk-4
+  |                                                                         |...........                                                      |  16%
+  ordinary text without R code
+
+  |                                                                         |............                                                     |  18%
+label: unnamed-chunk-5
+  |                                                                         |.............                                                    |  20%
+  ordinary text without R code
+
+  |                                                                         |..............                                                   |  22%
+label: unnamed-chunk-6
+  |                                                                         |...............                                                  |  24%
+  ordinary text without R code
+
+  |                                                                         |.................                                                |  25%
+label: unnamed-chunk-7
+  |                                                                         |..................                                               |  27%
+  ordinary text without R code
+
+  |                                                                         |...................                                              |  29%
+label: unnamed-chunk-8
+  |                                                                         |....................                                             |  31%
+  ordinary text without R code
+
+  |                                                                         |.....................                                            |  33%
+label: unnamed-chunk-9
+  |                                                                         |......................                                           |  35%
+  ordinary text without R code
+
+  |                                                                         |........................                                         |  36%
+label: unnamed-chunk-10
+  |                                                                         |.........................                                        |  38%
+  ordinary text without R code
+
+  |                                                                         |..........................                                       |  40%
+label: unnamed-chunk-11
+  |                                                                         |...........................                                      |  42%
+  ordinary text without R code
+
+  |                                                                         |............................                                     |  44%
+label: unnamed-chunk-12
+  |                                                                         |..............................                                   |  45%
+  ordinary text without R code
+
+  |                                                                         |...............................                                  |  47%
+label: unnamed-chunk-13
+  |                                                                         |................................                                 |  49%
+  ordinary text without R code
+
+  |                                                                         |.................................                                |  51%
+label: unnamed-chunk-14
+  |                                                                         |..................................                               |  53%
+  ordinary text without R code
+
+  |                                                                         |...................................                              |  55%
+label: unnamed-chunk-15
+  |                                                                         |.....................................                            |  56%
+  ordinary text without R code
+
+  |                                                                         |......................................                           |  58%
+label: unnamed-chunk-16
+  |                                                                         |.......................................                          |  60%
+  ordinary text without R code
+
+  |                                                                         |........................................                         |  62%
+label: unnamed-chunk-17
+  |                                                                         |.........................................                        |  64%
+  ordinary text without R code
+
+  |                                                                         |...........................................                      |  65%
+label: unnamed-chunk-18
+  |                                                                         |............................................                     |  67%
+  ordinary text without R code
+
+  |                                                                         |.............................................                    |  69%
+label: unnamed-chunk-19
+  |                                                                         |..............................................                   |  71%
+  ordinary text without R code
+
+  |                                                                         |...............................................                  |  73%
+label: unnamed-chunk-20
+  |                                                                         |................................................                 |  75%
+  ordinary text without R code
+
+  |                                                                         |..................................................               |  76%
+label: unnamed-chunk-21
+  |                                                                         |...................................................              |  78%
+  ordinary text without R code
+
+  |                                                                         |....................................................             |  80%
+label: unnamed-chunk-22
+  |                                                                         |.....................................................            |  82%
+  ordinary text without R code
+
+  |                                                                         |......................................................           |  84%
+label: unnamed-chunk-23
+  |                                                                         |........................................................         |  85%
+  ordinary text without R code
+
+  |                                                                         |.........................................................        |  87%
+label: unnamed-chunk-24
+  |                                                                         |..........................................................       |  89%
+  ordinary text without R code
+
+  |                                                                         |...........................................................      |  91%
+label: unnamed-chunk-25
+  |                                                                         |............................................................     |  93%
+  ordinary text without R code
+
+  |                                                                         |.............................................................    |  95%
+label: unnamed-chunk-26
+  |                                                                         |...............................................................  |  96%
+  ordinary text without R code
+
+  |                                                                         |................................................................ |  98%
+label: unnamed-chunk-27
+  |                                                                         |.................................................................| 100%
+  ordinary text without R code
+
+
+output file: propagate_gene_ontology.md
+
+> 
+> #unlink ("misdatos.txt")
+> 
+> 
+> ###EXIT
+> warnings ()
+NULL
+> sessionInfo ()
+R version 3.2.0 (2015-04-16)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 14.04.2 LTS
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=es_ES.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=es_ES.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=es_ES.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=es_ES.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] parallel  stats4    stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+ [1] RamiGO_1.14.0        gsubfn_0.6-6         proto_0.3-10        
+ [4] GO.db_3.1.2          RSQLite_1.0.0        DBI_0.3.1           
+ [7] AnnotationDbi_1.30.1 GenomeInfoDb_1.4.0   IRanges_2.2.1       
+[10] S4Vectors_0.6.0      Biobase_2.28.0       BiocGenerics_0.14.0 
+[13] knitr_1.10.5        
+
+loaded via a namespace (and not attached):
+ [1] igraph_0.7.1      graph_1.46.0      magrittr_1.5      stringr_1.0.0    
+ [5] tcltk_3.2.0       tools_3.2.0       RCytoscape_1.18.0 png_0.1-7        
+ [9] bitops_1.0-6      RCurl_1.95-4.6    mime_0.3          evaluate_0.7     
+[13] stringi_0.4-1     XMLRPC_0.3-0      XML_3.98-1.1      markdown_0.7.7   
+> q ("no")
+> proc.time()
+   user  system elapsed 
+  5.618   0.137  21.120 

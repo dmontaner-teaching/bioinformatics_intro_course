@@ -1,0 +1,433 @@
+
+R version 3.0.1 (2013-05-16) -- "Good Sport"
+Copyright (C) 2013 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##2013_04_22_biomart.r
+> ##2013-04-21 dmontaner@cipf.es
+> ##Bioconductor biomaRt library usage example
+> 
+> ##Start
+> rm (list = ls ())
+> R.version.string #"R version 3.0.0 RC (2013-03-26 r62418)"
+[1] "R version 3.0.1 (2013-05-16)"
+> library (biomaRt); packageDescription ("biomaRt", fields = "Version") #"2.16.0"
+[1] "2.16.0"
+> help (package = biomaRt)
+
+		Information on package ‘biomaRt’
+
+Description:
+
+Package:        biomaRt
+Version:        2.16.0
+Title:          Interface to BioMart databases (e.g. Ensembl, COSMIC
+                ,Wormbase and Gramene)
+Author:         Steffen Durinck <sdurinck@gmail.com>, Wolfgang Huber
+                <huber@ebi.ac.uk>
+Contributors:   Sean Davis <sdavis2@mail.nih.gov>, Francois Pepin,Vince
+                S. Buffalo
+Maintainer:     Steffen Durinck <sdurinck@gmail.com>
+Depends:        methods
+Imports:        utils, XML, RCurl
+Suggests:       annotate
+biocViews:      Annotation
+Description:    In recent years a wealth of biological data has become
+                available in public data repositories. Easy access to
+                these valuable data resources and firm integration with
+                data analysis is needed for comprehensive
+                bioinformatics data analysis.  biomaRt provides an
+                interface to a growing collection of databases
+                implementing the BioMart software suite
+                (http://www.biomart.org). The package enables retrieval
+                of large amounts of data in a uniform way without the
+                need to know the underlying database schemas or write
+                complex SQL queries. Examples of BioMart databases are
+                Ensembl, COSMIC, Uniprot, HGNC, Gramene, Wormbase and
+                dbSNP mapped to Ensembl. These major databases give
+                biomaRt users direct access to a diverse set of data
+                and enable a wide range of powerful online queries from
+                gene annotation to database mining.
+License:        Artistic-2.0
+LazyLoad:       yes
+Packaged:       2013-04-04 06:48:11 UTC; biocbuild
+Built:          R 3.0.0; ; 2013-04-21 18:42:30 UTC; unix
+
+Index:
+
+Mart-class              Class Mart
+NP2009code              Display the analysis code from the 2009 Nature
+                        protocols paper
+attributePages          Gives a summary of the attribute pages
+exportFASTA             Exports getSequence results to FASTA format
+filterOptions           Displays the filter options
+filterType              Displays the filter type
+getBM                   Retrieves information from the BioMart database
+getBMlist               Retrieves information from the BioMart database
+getGene                 Retrieves gene annotation information given a
+                        vector of identifiers
+getLDS                  Retrieves information from two linked datasets
+getSequence             Retrieves sequences
+getXML                  Retrieves information from the BioMart database
+                        using an XML query
+listAttributes          lists the attributes available in the selected
+                        dataset
+listDatasets            lists the datasets available in the selected
+                        BioMart database
+listFilters             lists the filters available in the selected
+                        dataset
+listMarts               lists the avilable BioMart databases
+useDataset              Select a dataset to use and updates Mart object
+useMart                 Connects to the selected BioMart database and
+                        dataset
+
+Further information is available in the following vignettes in
+directory ‘/usr/local/lib/R/site-library/biomaRt/doc’:
+
+biomaRt: The biomaRt users guide (source, pdf)
+
+> 
+> 
+> ##List of repositories
+> marts <- listMarts ()
+> class (marts)
+[1] "data.frame"
+> colnames (marts)
+[1] "biomart" "version"
+> sapply (marts, class)
+ biomart  version 
+"factor" "factor" 
+> marts[1:10,]
+                 biomart                               version
+1                ensembl          ENSEMBL GENES 71 (SANGER UK)
+2                    snp      ENSEMBL VARIATION 71 (SANGER UK)
+3    functional_genomics     ENSEMBL REGULATION 71 (SANGER UK)
+4                   vega                  VEGA 51  (SANGER UK)
+5          fungi_mart_18             ENSEMBL FUNGI 18 (EBI UK)
+6    fungi_variations_18   ENSEMBL FUNGI VARIATION 18 (EBI UK)
+7        metazoa_mart_18           ENSEMBL METAZOA 18 (EBI UK)
+8  metazoa_variations_18 ENSEMBL METAZOA VARIATION 18 (EBI UK)
+9         plants_mart_18            ENSEMBL PLANTS 18 (EBI UK)
+10  plants_variations_18  ENSEMBL PLANTS VARIATION 18 (EBI UK)
+> 
+> 
+> ##Find Ensembl resources
+> grep ("ensembl", marts[,"biomart"], ignore.case = TRUE, value = "TRUE")
+[1] "ensembl"                              
+[2] "Sigenae_Oligo_Annotation_Ensembl_61"  
+[3] "Sigenae Oligo Annotation (Ensembl 59)"
+[4] "Sigenae Oligo Annotation (Ensembl 56)"
+[5] "Ensembl56"                            
+[6] "ENSEMBL_MART_PLANT"                   
+[7] "ENSEMBL_MART_PLANT_SNP"               
+> grep ("ensembl", marts[,"version"], ignore.case = TRUE, value = "TRUE")
+ [1] "ENSEMBL GENES 71 (SANGER UK)"              
+ [2] "ENSEMBL VARIATION 71 (SANGER UK)"          
+ [3] "ENSEMBL REGULATION 71 (SANGER UK)"         
+ [4] "ENSEMBL FUNGI 18 (EBI UK)"                 
+ [5] "ENSEMBL FUNGI VARIATION 18 (EBI UK)"       
+ [6] "ENSEMBL METAZOA 18 (EBI UK)"               
+ [7] "ENSEMBL METAZOA VARIATION 18 (EBI UK)"     
+ [8] "ENSEMBL PLANTS 18 (EBI UK)"                
+ [9] "ENSEMBL PLANTS VARIATION 18 (EBI UK)"      
+[10] "ENSEMBL PROTISTS 18 (EBI UK)"              
+[11] "ENSEMBL PROTISTS VARIATION 18 (EBI UK)"    
+[12] "SIGENAE OLIGO ANNOTATION (ENSEMBL 61)"     
+[13] "SIGENAE OLIGO ANNOTATION (ENSEMBL 59)"     
+[14] "SIGENAE OLIGO ANNOTATION (ENSEMBL 56)"     
+[15] "GRAMENE 36 ENSEMBL GENES (CSHL/CORNELL US)"
+> 
+> ids1 <- grep ("ensembl", marts[,"biomart"], ignore.case = TRUE)
+> ids2 <- grep ("ensembl", marts[,"version"], ignore.case = TRUE)
+> 
+> ids1
+[1]  1 40 41 42 51 52 53
+> ids2
+ [1]  1  2  3  5  6  7  8  9 10 11 12 40 41 42 52
+> 
+> setdiff (ids1, ids2)
+[1] 51 53
+> 
+> ids <- sort (unique (c(ids1, ids2)))
+> ids
+ [1]  1  2  3  5  6  7  8  9 10 11 12 40 41 42 51 52 53
+> 
+> marts[ids,]
+                                 biomart
+1                                ensembl
+2                                    snp
+3                    functional_genomics
+5                          fungi_mart_18
+6                    fungi_variations_18
+7                        metazoa_mart_18
+8                  metazoa_variations_18
+9                         plants_mart_18
+10                  plants_variations_18
+11                      protists_mart_18
+12                protists_variations_18
+40   Sigenae_Oligo_Annotation_Ensembl_61
+41 Sigenae Oligo Annotation (Ensembl 59)
+42 Sigenae Oligo Annotation (Ensembl 56)
+51                             Ensembl56
+52                    ENSEMBL_MART_PLANT
+53                ENSEMBL_MART_PLANT_SNP
+                                                    version
+1                              ENSEMBL GENES 71 (SANGER UK)
+2                          ENSEMBL VARIATION 71 (SANGER UK)
+3                         ENSEMBL REGULATION 71 (SANGER UK)
+5                                 ENSEMBL FUNGI 18 (EBI UK)
+6                       ENSEMBL FUNGI VARIATION 18 (EBI UK)
+7                               ENSEMBL METAZOA 18 (EBI UK)
+8                     ENSEMBL METAZOA VARIATION 18 (EBI UK)
+9                                ENSEMBL PLANTS 18 (EBI UK)
+10                     ENSEMBL PLANTS VARIATION 18 (EBI UK)
+11                             ENSEMBL PROTISTS 18 (EBI UK)
+12                   ENSEMBL PROTISTS VARIATION 18 (EBI UK)
+40                    SIGENAE OLIGO ANNOTATION (ENSEMBL 61)
+41                    SIGENAE OLIGO ANNOTATION (ENSEMBL 59)
+42                    SIGENAE OLIGO ANNOTATION (ENSEMBL 56)
+51 PANCREATIC EXPRESSION DATABASE (INSTITUTE OF CANCER  UK)
+52               GRAMENE 36 ENSEMBL GENES (CSHL/CORNELL US)
+53                   GRAMENE 36 VARIATION (CSHL/CORNELL US)
+> 
+> 
+> 
+> ##Use ensembl ENSEMBL GENES
+> marts[1,]
+  biomart                      version
+1 ensembl ENSEMBL GENES 71 (SANGER UK)
+> 
+> mi.mart <- useMart ("ensembl")
+> class (mi.mart)
+[1] "Mart"
+attr(,"package")
+[1] "biomaRt"
+> mi.mart
+Object of class 'Mart':
+ Using the ensembl BioMart database
+ Using the  dataset
+> 
+> 
+> ###Find Datasets in the repository
+> mis.datasets <- listDatasets (mi.mart)
+> class (mis.datasets)
+[1] "data.frame"
+> colnames (mis.datasets)
+[1] "dataset"     "description" "version"    
+> mis.datasets[1:10,]
+                          dataset                                description
+1          oanatinus_gene_ensembl     Ornithorhynchus anatinus genes (OANA5)
+2           tguttata_gene_ensembl    Taeniopygia guttata genes (taeGut3.2.4)
+3         cporcellus_gene_ensembl            Cavia porcellus genes (cavPor3)
+4         gaculeatus_gene_ensembl     Gasterosteus aculeatus genes (BROADS1)
+5          lafricana_gene_ensembl         Loxodonta africana genes (loxAfr3)
+6  itridecemlineatus_gene_ensembl Ictidomys tridecemlineatus genes (spetri2)
+7         mlucifugus_gene_ensembl           Myotis lucifugus genes (myoLuc2)
+8           hsapiens_gene_ensembl            Homo sapiens genes (GRCh37.p10)
+9         choffmanni_gene_ensembl        Choloepus hoffmanni genes (choHof1)
+10         csavignyi_gene_ensembl             Ciona savignyi genes (CSAV2.0)
+       version
+1        OANA5
+2  taeGut3.2.4
+3      cavPor3
+4      BROADS1
+5      loxAfr3
+6      spetri2
+7      myoLuc2
+8   GRCh37.p10
+9      choHof1
+10     CSAV2.0
+> 
+> 
+> ###Use the Human dataset
+> mi.mart2 <- useMart ("ensembl", dataset="hsapiens_gene_ensembl")
+> class (mi.mart2)
+[1] "Mart"
+attr(,"package")
+[1] "biomaRt"
+> mi.mart2
+Object of class 'Mart':
+ Using the ensembl BioMart database
+ Using the hsapiens_gene_ensembl dataset
+> mi.mart   ##OBS: Dataset was not set before
+Object of class 'Mart':
+ Using the ensembl BioMart database
+ Using the  dataset
+> 
+> 
+> ###Find Filters
+> filtros <- listFilters (mi.mart2)
+> class (filtros)
+[1] "data.frame"
+> colnames (filtros)
+[1] "name"        "description"
+> filtros[1:10,]
+              name     description
+1  chromosome_name Chromosome name
+2            start Gene Start (bp)
+3              end   Gene End (bp)
+4       band_start      Band Start
+5         band_end        Band End
+6     marker_start    Marker Start
+7       marker_end      Marker End
+8             type            Type
+9    encode_region   Encode region
+10          strand          Strand
+> 
+> grep ("affy ", filtros[,2], ignore.case = TRUE, value = TRUE)  ##Filter genes in the Affymetrix arrays
+ [1] "Affy hc g110 probeset ID(s) [e.g. 113_i_at]"              
+ [2] "Affy hg focus probeset ID(s) [e.g. 201612_at]"            
+ [3] "Affy hg u95a probeset ID(s) [e.g. 32647_at]"              
+ [4] "Affy hg u95av2 probeset ID(s) [e.g. 32647_at]"            
+ [5] "Affy hg u95b probeset ID(s) [e.g. 53925_at]"              
+ [6] "Affy hg u95c probeset ID(s) [e.g. 61056_r_at]"            
+ [7] "Affy hg u95d probeset ID(s) [e.g. 72661_at]"              
+ [8] "Affy hg u95e probeset ID(s) [e.g. 79965_at]"              
+ [9] "Affy hg u133a 2 probeset ID(s) [e.g. 200874_s_at]"        
+[10] "Affy hg u133a probeset ID(s) [e.g. 200874_s_at]"          
+[11] "Affy hg u133b probeset ID(s) [e.g. 227057_at]"            
+[12] "Affy hg u133 plus 2 probeset ID(s) [e.g. 241843_at]"      
+[13] "Affy HuGene FL probeset ID(s) [e.g. M58525_s_at]"         
+[14] "Affy HuGene 1_0 st v1 probeset ID(s) [e.g. 8016215]"      
+[15] "Affy HuEx 1_0 st v2 probeset ID(s) [e.g. 4033465]"        
+[16] "Affy u133 x3p probeset ID(s) [e.g. Hs2.205326.1.A1_3p_at]"
+> touse <- grep ("affy ", filtros[,2], ignore.case = TRUE)
+> touse
+ [1] 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 187
+> filtros[touse,]
+                     name
+171          affy_hc_g110
+172         affy_hg_focus
+173          affy_hg_u95a
+174        affy_hg_u95av2
+175          affy_hg_u95b
+176          affy_hg_u95c
+177          affy_hg_u95d
+178          affy_hg_u95e
+179       affy_hg_u133a_2
+180         affy_hg_u133a
+181         affy_hg_u133b
+182   affy_hg_u133_plus_2
+183         affy_hugenefl
+184 affy_hugene_1_0_st_v1
+185   affy_huex_1_0_st_v2
+187         affy_u133_x3p
+                                                  description
+171               Affy hc g110 probeset ID(s) [e.g. 113_i_at]
+172             Affy hg focus probeset ID(s) [e.g. 201612_at]
+173               Affy hg u95a probeset ID(s) [e.g. 32647_at]
+174             Affy hg u95av2 probeset ID(s) [e.g. 32647_at]
+175               Affy hg u95b probeset ID(s) [e.g. 53925_at]
+176             Affy hg u95c probeset ID(s) [e.g. 61056_r_at]
+177               Affy hg u95d probeset ID(s) [e.g. 72661_at]
+178               Affy hg u95e probeset ID(s) [e.g. 79965_at]
+179         Affy hg u133a 2 probeset ID(s) [e.g. 200874_s_at]
+180           Affy hg u133a probeset ID(s) [e.g. 200874_s_at]
+181             Affy hg u133b probeset ID(s) [e.g. 227057_at]
+182       Affy hg u133 plus 2 probeset ID(s) [e.g. 241843_at]
+183          Affy HuGene FL probeset ID(s) [e.g. M58525_s_at]
+184       Affy HuGene 1_0 st v1 probeset ID(s) [e.g. 8016215]
+185         Affy HuEx 1_0 st v2 probeset ID(s) [e.g. 4033465]
+187 Affy u133 x3p probeset ID(s) [e.g. Hs2.205326.1.A1_3p_at]
+> 
+> 
+> ###Attributes
+> at <- listAttributes (mi.mart2)
+> class (at)
+[1] "data.frame"
+> dim (at)
+[1] 1712    2
+> at[1:3,]
+                   name           description
+1       ensembl_gene_id       Ensembl Gene ID
+2 ensembl_transcript_id Ensembl Transcript ID
+3    ensembl_peptide_id    Ensembl Protein ID
+> 
+> ##Find GO annotation attributes
+> grep ("go ", at[,2], ignore.case = TRUE, value = TRUE) ## the space is helpful
+[1] "GO Term Accession"     "GO Term Name"          "GO Term Definition"   
+[4] "GO Term Evidence Code" "GO domain"            
+> touse <- grep ("go ", at[,2], ignore.case = TRUE)
+> touse
+[1] 24 25 26 27 28
+> at[touse,]
+              name           description
+24           go_id     GO Term Accession
+25       name_1006          GO Term Name
+26 definition_1006    GO Term Definition
+27 go_linkage_type GO Term Evidence Code
+28  namespace_1003             GO domain
+> 
+> 
+> ###QUERY: get GO terms for certain Affy ids
+> res <- getBM (attributes = c("affy_hg_u95av2", "go_id", "name_1006"),
++               filters = "affy_hg_u95av2", values = c("1939_at", "1503_at", "1454_at"), mart = mi.mart2)
+> class (res)
+[1] "data.frame"
+> dim (res)
+[1] 287   3
+> res[1:3,]
+  affy_hg_u95av2      go_id
+1        1939_at GO:0000122
+2        1939_at GO:0008283
+3        1939_at GO:0045944
+                                                             name_1006
+1 negative regulation of transcription from RNA polymerase II promoter
+2                                                   cell proliferation
+3 positive regulation of transcription from RNA polymerase II promoter
+> 
+> 
+> ###QUERY: get GO terms for certain Affy ids
+> res.all <- getBM (attributes = c("affy_hg_u95av2", "go_id", "name_1006"), mart = mi.mart2)
+> class (res.all)
+[1] "data.frame"
+> dim (res.all)
+[1] 216380      3
+> res.all[1:3,]
+  affy_hg_u95av2      go_id                                    name_1006
+1                GO:0007186 G-protein coupled receptor signaling pathway
+2                GO:0016021                         integral to membrane
+3                GO:0005886                              plasma membrane
+> 
+> 
+> ###EXIT
+> warnings ()
+NULL
+> sessionInfo ()
+R version 3.0.1 (2013-05-16)
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=C                 LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] biomaRt_2.16.0
+
+loaded via a namespace (and not attached):
+[1] RCurl_1.95-4.1 XML_3.96-1.1  
+> q ("no")
+> proc.time()
+   user  system elapsed 
+  4.040   0.372 394.865 

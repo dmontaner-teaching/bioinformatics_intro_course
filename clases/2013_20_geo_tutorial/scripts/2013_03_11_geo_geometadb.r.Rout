@@ -1,0 +1,534 @@
+
+R version 3.0.1 (2013-05-16) -- "Good Sport"
+Copyright (C) 2013 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##geo_geometadb.r
+> ##2013-03-03 dmontaner@cipf.es
+> ##GEOmetadb library example
+> 
+> ##Tested using GEOmetadb Version: "2.25.0"
+> 
+> 
+> ###Clear working environment and load library
+> rm (list = ls ())
+> library (GEOmetadb); packageDescription ("GEOmetadb", fields = "Version") #"2.25.0"
+Loading required package: GEOquery
+Loading required package: Biobase
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:stats’:
+
+    xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, as.data.frame, cbind, colnames, duplicated, eval,
+    Filter, Find, get, intersect, lapply, Map, mapply, match, mget,
+    order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+    rbind, Reduce, rep.int, rownames, sapply, setdiff, sort, table,
+    tapply, union, unique, unlist
+
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+Setting options('download.file.method.GEOquery'='curl')
+Loading required package: RSQLite
+Loading required package: DBI
+[1] "1.20.0"
+> help (package = GEOmetadb)
+
+		Information on package ‘GEOmetadb’
+
+Description:
+
+Package:       GEOmetadb
+Type:          Package
+Title:         A compilation of metadata from NCBI GEO
+Version:       1.20.0
+Date:          2011-11-28
+Depends:       GEOquery,RSQLite
+Author:        Jack Zhu and Sean Davis
+Maintainer:    Jack Zhu <zhujack@mail.nih.gov>
+biocViews:     Infrastructure
+Description:   The NCBI Gene Expression Omnibus (GEO) represents the
+               largest public repository of microarray data. However,
+               finding data of interest can be challenging using
+               current tools. GEOmetadb is an attempt to make access to
+               the metadata associated with samples, platforms, and
+               datasets much more feasible. This is accomplished by
+               parsing all the NCBI GEO metadata into a SQLite database
+               that can be stored and queried locally. GEOmetadb is
+               simply a thin wrapper around the SQLite database along
+               with associated documentation. Finally, the SQLite
+               database is updated regularly as new data is added to
+               GEO and can be downloaded at will for the most
+               up-to-date metadata. GEOmetadb paper:
+               http://bioinformatics.oxfordjournals.org/cgi/content/short/24/23/2798
+               .
+URL:           http://gbnci.abcc.ncifcrf.gov/geo/
+License:       Artistic-2.0
+Packaged:      2013-04-04 07:26:01 UTC; biocbuild
+Built:         R 3.0.0; ; 2013-04-15 13:07:36 UTC; unix
+
+Index:
+
+GEOmetadb-package       Query NCBI GEO metadata from a local SQLite
+                        database
+columnDescriptions      Get column descriptions for the GEOmetadb
+                        database
+geoConvert              Cross-reference between GEO data types
+getBiocPlatformMap      Get mappings between GPL and Bioconductor
+                        microarry annotation packages
+getSQLiteFile           Download and unzip the most recent GEOmetadb
+                        SQLite file
+
+Further information is available in the following vignettes in
+directory ‘/usr/local/lib/R/site-library/GEOmetadb/doc’:
+
+GEOmetadb: GEOmetadb (source, pdf)
+
+> 
+> 
+> ###Get the database file: "GEOmetadb.sqlite"
+> getSQLiteFile()
+trying URL 'http://dl.dropbox.com/u/51653511/GEOmetadb.sqlite.gz'
+Content type 'application/octet-stream' length 179045550 bytes (170.8 Mb)
+opened URL
+==============================================
+downloaded 170.8 Mb
+
+Unzipping...
+Metadata associate with downloaded file:
+                name               value
+1     schema version                 1.0
+2 creation timestamp 2013-06-15 05:40:32
+[1] "/home/dmontaner/documentos/masterUV/presentaciones/20_geo_tutorial/scripts/GEOmetadb.sqlite"
+Warning messages:
+1: In url(url_geo_1, open = "rb") :
+  cannot open: HTTP status was '404 Not Found'
+2: In url(url_geo_2, open = "rb") :
+  cannot open: HTTP status was '403 Forbidden'
+> dir ()
+[1] "2013_03_11_geo_geometadb.r"        "2013_03_11_geo_geometadb.r.Rout"  
+[3] "2013_03_11_geo_geoquery.r"         "2013_03_11_geo_geoquery.r.Rout"   
+[5] "geo_down.RData"                    "GEOmetadb.sqlite"                 
+[7] "GSE17538-GPL570_series_matrix.txt" "Rplots.pdf"                       
+> 
+> 
+> ###Connect to the database
+> con <- dbConnect(SQLite(),'GEOmetadb.sqlite')
+> 
+> ###Show tables
+> dbListTables (con)
+ [1] "gds"               "gds_subset"        "geoConvert"       
+ [4] "geodb_column_desc" "gpl"               "gse"              
+ [7] "gse_gpl"           "gse_gsm"           "gsm"              
+[10] "metaInfo"          "sMatrix"          
+> 
+> 
+> ###Send SQL query
+> myquery <- dbGetQuery(con, 'select * from gse limit 5')
+> myquery
+  ID                                                    title  gse
+1  1                                     NHGRI_Melanoma_class GSE1
+2  2                                   Cerebellar development GSE2
+3  3             Renal Cell Carcinoma Differential Expression GSE3
+4  4     Diurnal and Circadian-Regulated Genes in Arabidopsis GSE4
+5  5 Global profile of germline gene expression in C. elegans GSE5
+                 status submission_date last_update_date pubmed_id
+1 Public on Jan 22 2001      2001-01-22       2012-02-23  10952317
+2 Public on Apr 26 2001      2001-04-19       2012-02-23        NA
+3 Public on Jul 19 2001      2001-07-19       2012-02-23  11691851
+4 Public on Jul 20 2001      2001-07-20       2012-02-23  11158533
+5 Public on Jul 24 2001      2001-07-24       2012-02-23  11030340
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        summary
+1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                This series represents a group of cutaneous malignant melanomas and unrelated controls which were clustered based on correlation coefficients calculated through a comparison of gene expression;\tprofiles.;\tKeywords: other
+2                                                                                                                                                                                                                                                                                                                                                                                                                        The Affymetrix GeneChip Mu11K was used to analyze the gene expression profile in developing mouse cerebellum (two GeneChips per E18, P7, P14, P21, and P56) to assist in the understanding of the genetic basis of cerebellar development in mice.;\tThe analysis showed 81.6% (10,321/12,654) of the genes represented on the GeneChip were expressed in the postnatal cerebellum, and among those, 8.7% (897/10,321) were differentially expressed with more than a two-fold change in their maximum and minimum expression levels during the developmental time course.;\tThe expression data (mean signal in relative unit) of all of these 897 differentially expressed genes were listed in GSM50(for E18), GSM51(for P7), GSM52(for P14), GSM53(for P21), and GSM54(for P56)  as well as our homepage at http://www.brain.riken.go.jp/labs/lm;\tKeywords = mouse cerebellum development;\tKeywords: time-course
+3 We investigated the changes in gene expression accompanying the development and progression of kidney cancer using 31,500 element complementary DNA arrays. We measured expression profiles for paired neoplastic and non-cancerous renal epithelium samples from 37 individuals. Using an experimental design optimized for factoring out technological and biological noise, and an adapted statistical test, we find 1738 differentially expressed cDNAs with an expected number of 6 false positives. Functional annotation of these genes provided views of the changes in the activities of specific biological pathways in renal cancer. Cell adhesion, signal transduction, and nucleotide metabolism were among the biological processes with a large proportion of genes overexpressed in renal cell carcinoma. Downregulated pathways in the kidney tumor cells included small molecule transport, ion homeostasis, and oxygen and radical metabolism. Our expression profiling data uncover gene expression changes shared with other epithelial tumors, as well as a unique signature for renal cell carcinoma. Expression data for the differentially expressed cDNAs are available in the web supplement (http://www.dkfz-heidelberg.de/abt0840/whuber/rcc).;\tKeywords = renal clear cell carcinoma, kidney;\tKeywords: other
+4                                                                                                                                                                                                                                                                           Plants respond to day/night cycling in a number of physiological ways. At the mRNA level, the expression of some genes changes during the 24-hr period. To identify novel genes regulated in this way, we used microarrays containing 11,521 Arabidopsis expressed sequence tags, representing an estimated 7800 unique genes, to determine gene expression levels at 6-hr intervals throughout the day. Eleven percent of the genes, encompassing genes expressed at both high and low levels, showed a diurnal expression pattern. Approximately 2% cycled with a circadian rhythm. By clustering microarray data from 47 additional, unrelated experiments, we identified groups of genes regulated only by the circadian clock. These groups contained the already characterized clock-associated genes LHY, CCA1, and GI, suggesting that other key circadian clock genes might be found within these clusters.;\tThis research has been described more fully in Schaffer R et al.(2001) Plant Cell 13:113-123;\tKeywords = circadian rhythm;\tKeywords: other
+5                                                                                                                                                                                                                                                                                                                                                                                                                                    We used DNA microarrays to profile gene expression patterns in the C. elegans germline and identified 1416 germline-enriched transcripts that define three groups. The sperm-enriched group contains an unusually large number of protein kinases and phosphatases. The oocyte-enriched group includes potentially new components of embryonic signaling pathways. The germline-intrinsic group, defined as genes expressed similarly in germlines making only sperm or only oocytes, contains a family of piwi-related genes that may be important for stem cell proliferation. Finally, examination of the chromosomal location of germline transcripts revealed that sperm-enriched and germline-intrinsic genes are nearly absent from the X chromosome, but oocyte-enriched genes are not.;\tThis research has been described more fully in Reinke V et al.(2000) Mol Cell 6:605-16;\tKeywords: other
+                           type
+1 Expression profiling by array
+2 Expression profiling by array
+3 Expression profiling by array
+4 Expression profiling by array
+5 Expression profiling by array
+                                                                                                                                                                                     contributor
+1                                                                                                                                                                                           <NA>
+2                                                                                                                                                                                           <NA>
+3 Judith,M,Boer;\tWolfgang Huber;\tHolger Sueltmann;\tFriederike Wilmer;\tAnja von Heydebreck;\tStefan Haas;\tBernhard Korn;\tAndreas Vente;\tLaszlo Fuzesi;\tMartin Vingron;\tAnnemarie Poustka
+4                                                                                                                           R,,Schaffer;\tJ Landgraf;\tM Accerbi;\tV Simon;\tM Larson;\tE Wisman
+5                                                                       V,,Reinke;\tH,E,Smith;\tJ Nance;\tJ Wang;\tC Van Doren;\tR Begley;\tS,J,Jones;\tE,B,Davis;\tS Scherer;\tS Ward;\tS,K,Kim
+                                                            web_link
+1 http://www.nhgri.nih.gov/DIR/Microarray/selected_publications.html
+2                              http://www.brain.riken.go.jp/labs/lmn
+3                          www.dkfz-heidelberg.de/abt0840/whuber/rcc
+4                                                               <NA>
+5                                                               <NA>
+  overall_design repeats repeats_sample_list variable variable_description
+1           <NA>    <NA>                <NA>     <NA>                 <NA>
+2           <NA>    <NA>                <NA>     <NA>                 <NA>
+3           <NA>    <NA>                <NA>     <NA>                 <NA>
+4           <NA>    <NA>                <NA>     <NA>                 <NA>
+5           <NA>    <NA>                <NA>     <NA>                 <NA>
+                                                                                                                                                                                                                                                                                                                                                             contact
+1                                       Name: Michael Bittner;\tEmail: mbittner@nhgri.nih.gov;\tPhone: 301-496-7980;\tFax: 301-402-3241;\tDepartment: Cancer Genetics Branch;\tInstitute: NHGRI, NIH;\tAddress:  ;\tCity: Bethesda;\tState: MD;\tZip/postal_code: 20892;\tCountry: USA;\tWeb_link: http://www.nhgri.nih.gov/Intramural_research/People/bittnerm.html
+2 Name: Yoshihiro Kagami;\tEmail: ykagami@brain.riken.go.jp;\tPhone: +81-48-467-6079;\tFax: +81-48-467-6079;\tLaboratory: Molecular Neurogenesis;\tDepartment:  ;\tInstitute: RIKEN Brain Science Institute;\tAddress: 2-1 Hirosawa;\tCity: Wako-shi;\tState: Saitama;\tZip/postal_code: 351-0198;\tCountry: Japan;\tWeb_link: http://www.brain.riken.go.jp/labs/lmn
+3                                      Name: Wolfgang Huber;\tEmail: w.huber@dkfz.de;\tPhone: +49-6221-424709;\tFax: +49-6221-423470;\tDepartment: Molecular Genome Analysis;\tInstitute: German Cancer Research Center;\tAddress: Im Neuenheimer Feld 280;\tCity: Heidelberg;\tZip/postal_code: 69120;\tCountry: Germany;\tWeb_link: www.dkfz-heidelberg.de/abt0840
+4                  Name:  Stanford Microarray Database;\tEmail: array@genome.stanford.edu;\tPhone: 650-498-6012;\tDepartment: Stanford University, School of Medicine;\tInstitute: Stanford Microarray Database (SMD);\tAddress: 300 Pasteur Drive;\tCity: Stanford;\tState: CA;\tZip/postal_code: 94305;\tCountry: USA;\tWeb_link: http://genome-www5.stanford.edu/
+5                  Name:  Stanford Microarray Database;\tEmail: array@genome.stanford.edu;\tPhone: 650-498-6012;\tDepartment: Stanford University, School of Medicine;\tInstitute: Stanford Microarray Database (SMD);\tAddress: 300 Pasteur Drive;\tCity: Stanford;\tState: CA;\tZip/postal_code: 94305;\tCountry: USA;\tWeb_link: http://genome-www5.stanford.edu/
+  supplementary_file
+1               <NA>
+2               <NA>
+3               <NA>
+4               <NA>
+5               <NA>
+> 
+> 
+> ##Read a full table into an R object
+> tabla <- dbReadTable (con, "gse")
+> class (tabla)
+[1] "data.frame"
+> dim (tabla)
+[1] 38924    18
+> colnames (tabla)
+ [1] "ID"                   "title"                "gse"                 
+ [4] "status"               "submission_date"      "last_update_date"    
+ [7] "pubmed_id"            "summary"              "type"                
+[10] "contributor"          "web_link"             "overall_design"      
+[13] "repeats"              "repeats_sample_list"  "variable"            
+[16] "variable_description" "contact"              "supplementary_file"  
+> tabla[1:3,]
+  ID                                        title  gse                status
+1  1                         NHGRI_Melanoma_class GSE1 Public on Jan 22 2001
+2  2                       Cerebellar development GSE2 Public on Apr 26 2001
+3  3 Renal Cell Carcinoma Differential Expression GSE3 Public on Jul 19 2001
+  submission_date last_update_date pubmed_id
+1      2001-01-22       2012-02-23  10952317
+2      2001-04-19       2012-02-23        NA
+3      2001-07-19       2012-02-23  11691851
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        summary
+1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                This series represents a group of cutaneous malignant melanomas and unrelated controls which were clustered based on correlation coefficients calculated through a comparison of gene expression;\tprofiles.;\tKeywords: other
+2                                                                                                                                                                                                                                                                                                                                                                                                                        The Affymetrix GeneChip Mu11K was used to analyze the gene expression profile in developing mouse cerebellum (two GeneChips per E18, P7, P14, P21, and P56) to assist in the understanding of the genetic basis of cerebellar development in mice.;\tThe analysis showed 81.6% (10,321/12,654) of the genes represented on the GeneChip were expressed in the postnatal cerebellum, and among those, 8.7% (897/10,321) were differentially expressed with more than a two-fold change in their maximum and minimum expression levels during the developmental time course.;\tThe expression data (mean signal in relative unit) of all of these 897 differentially expressed genes were listed in GSM50(for E18), GSM51(for P7), GSM52(for P14), GSM53(for P21), and GSM54(for P56)  as well as our homepage at http://www.brain.riken.go.jp/labs/lm;\tKeywords = mouse cerebellum development;\tKeywords: time-course
+3 We investigated the changes in gene expression accompanying the development and progression of kidney cancer using 31,500 element complementary DNA arrays. We measured expression profiles for paired neoplastic and non-cancerous renal epithelium samples from 37 individuals. Using an experimental design optimized for factoring out technological and biological noise, and an adapted statistical test, we find 1738 differentially expressed cDNAs with an expected number of 6 false positives. Functional annotation of these genes provided views of the changes in the activities of specific biological pathways in renal cancer. Cell adhesion, signal transduction, and nucleotide metabolism were among the biological processes with a large proportion of genes overexpressed in renal cell carcinoma. Downregulated pathways in the kidney tumor cells included small molecule transport, ion homeostasis, and oxygen and radical metabolism. Our expression profiling data uncover gene expression changes shared with other epithelial tumors, as well as a unique signature for renal cell carcinoma. Expression data for the differentially expressed cDNAs are available in the web supplement (http://www.dkfz-heidelberg.de/abt0840/whuber/rcc).;\tKeywords = renal clear cell carcinoma, kidney;\tKeywords: other
+                           type
+1 Expression profiling by array
+2 Expression profiling by array
+3 Expression profiling by array
+                                                                                                                                                                                     contributor
+1                                                                                                                                                                                           <NA>
+2                                                                                                                                                                                           <NA>
+3 Judith,M,Boer;\tWolfgang Huber;\tHolger Sueltmann;\tFriederike Wilmer;\tAnja von Heydebreck;\tStefan Haas;\tBernhard Korn;\tAndreas Vente;\tLaszlo Fuzesi;\tMartin Vingron;\tAnnemarie Poustka
+                                                            web_link
+1 http://www.nhgri.nih.gov/DIR/Microarray/selected_publications.html
+2                              http://www.brain.riken.go.jp/labs/lmn
+3                          www.dkfz-heidelberg.de/abt0840/whuber/rcc
+  overall_design repeats repeats_sample_list variable variable_description
+1           <NA>    <NA>                <NA>     <NA>                 <NA>
+2           <NA>    <NA>                <NA>     <NA>                 <NA>
+3           <NA>    <NA>                <NA>     <NA>                 <NA>
+                                                                                                                                                                                                                                                                                                                                                             contact
+1                                       Name: Michael Bittner;\tEmail: mbittner@nhgri.nih.gov;\tPhone: 301-496-7980;\tFax: 301-402-3241;\tDepartment: Cancer Genetics Branch;\tInstitute: NHGRI, NIH;\tAddress:  ;\tCity: Bethesda;\tState: MD;\tZip/postal_code: 20892;\tCountry: USA;\tWeb_link: http://www.nhgri.nih.gov/Intramural_research/People/bittnerm.html
+2 Name: Yoshihiro Kagami;\tEmail: ykagami@brain.riken.go.jp;\tPhone: +81-48-467-6079;\tFax: +81-48-467-6079;\tLaboratory: Molecular Neurogenesis;\tDepartment:  ;\tInstitute: RIKEN Brain Science Institute;\tAddress: 2-1 Hirosawa;\tCity: Wako-shi;\tState: Saitama;\tZip/postal_code: 351-0198;\tCountry: Japan;\tWeb_link: http://www.brain.riken.go.jp/labs/lmn
+3                                      Name: Wolfgang Huber;\tEmail: w.huber@dkfz.de;\tPhone: +49-6221-424709;\tFax: +49-6221-423470;\tDepartment: Molecular Genome Analysis;\tInstitute: German Cancer Research Center;\tAddress: Im Neuenheimer Feld 280;\tCity: Heidelberg;\tZip/postal_code: 69120;\tCountry: Germany;\tWeb_link: www.dkfz-heidelberg.de/abt0840
+  supplementary_file
+1               <NA>
+2               <NA>
+3               <NA>
+> 
+> 
+> ###Get melanoma in title
+> touse <- grep (pattern = "melanoma", tabla[,"title"], ignore.case = TRUE)
+> touse
+  [1]     1  1356  1496  1512  1527  1528  1575  2107  2207  2660  2914  3867
+ [13]  3873  3884  4026  4091  4110  4111  4113  4114  5124  5685  5719  5859
+ [25]  5963  6183  6207  6208  6501  6578  6628  6819  6903  6930  7126  7336
+ [37]  7471  7542  7617  7688  7692  7693  7902  8010  9070  9564  9659  9821
+ [49] 10254 10258 10261 10368 10727 10965 11014 11598 11612 12050 12119 12664
+ [61] 12687 13311 13441 13562 13724 13894 14301 14448 14985 15037 15199 15266
+ [73] 15275 15441 15496 16231 16345 16346 16348 17014 17019 17070 17156 17196
+ [85] 17642 17776 17872 18088 18155 18641 19119 19172 19711 19726 19727 19728
+ [97] 19868 19872 19873 20017 20341 20452 20456 20490 20570 20841 20851 21056
+[109] 21468 21651 21901 21903 21909 22205 22229 22318 22729 22784 22917 23513
+[121] 23570 23571 23582 23755 23785 23832 24128 24441 24841 24977 25146 25289
+[133] 25306 25775 25776 25779 25923 26186 26187 26201 27214 27468 27748 27856
+[145] 27921 27922 27923 28057 28103 28359 28390 28427 28902 29001 29275 29444
+[157] 29928 29963 29990 29991 30605 30728 30801 30954 31041 31382 31383 31384
+[169] 31434 31545 31603 31621 31871 31909 32079 32361 32366 32473 32605 32757
+[181] 32813 32814 32817 32843 32917 33697 33756 34214 34323 34395 34613 34766
+[193] 34930 34931 34933 34972 35076 35212 35735 36620 36621 36622 36693 36826
+[205] 36902 37243 37429 37430 37431 37433 37766 37939 38468
+> tabla[touse, "title"]
+  [1] "NHGRI_Melanoma_class"                                                                                                                                                                                        
+  [2] "Adenovirus-mediated E2F-1 gene transfer in melanoma cell line"                                                                                                                                               
+  [3] "Array-based comparative genomic hybridization for distinguishing paraffin-embedded Spitz nevi and melanomas"                                                                                                 
+  [4] "Effect of Seprase/FAP alpha on the metastasis of human melanoma LOX cell"                                                                                                                                    
+  [5] "Melanoma progression model: Differential Gene Expression"                                                                                                                                                    
+  [6] "Melanoma progression model:DAC-mediated gene expression"                                                                                                                                                     
+  [7] "Melanoma cell lines"                                                                                                                                                                                         
+  [8] "Novel Molecular Markers for non-melanoma skin cancer"                                                                                                                                                        
+  [9] "Distinct Sets of Genetic Alterations in Melanoma"                                                                                                                                                            
+ [10] "Novel genes associated with malignant melanoma but not benign melanocytic lesions"                                                                                                                           
+ [11] "Induction of Senescence in Diterpene Ester-Treated Melanoma Cells via PKC-dependent Hyperactivation of the MAPK Pathway"                                                                                     
+ [12] "Expression profiling reveals novel pathways in the transformation of melanocytes to melanomas."                                                                                                              
+ [13] "Expression profiling reveals novel pathways in the transformation of melanocytes to melanomas. II"                                                                                                           
+ [14] "Whole-genome expression profiling of melanoma progression."                                                                                                                                                  
+ [15] "Somatic Activation of KIT in Distinct Subtypes of Melanoma"                                                                                                                                                  
+ [16] "Expression data from control untreated mouse melanoma B16F1 cells"                                                                                                                                           
+ [17] "Metastatic potential of melanomas defined by specific gene expression profiles with no BRAF signature (Zürich)."                                                                                             
+ [18] "Metastatic potential of melanomas defined by specific gene expression profiles with no BRAF signature (Philadelphia)."                                                                                       
+ [19] "Metastatic potential of melanomas defined by specific gene expression profiles with no BRAF signature (Mannheim)."                                                                                           
+ [20] "Metastatic potential of melanomas defined by specific gene expression profiles with no BRAF signature."                                                                                                      
+ [21] "Gene expression in melanocytes and metastases melanoma cells from the pig"                                                                                                                                   
+ [22] "Gene Expression of Human Lymphocytes Used For ACT of Metastatic Melanoma"                                                                                                                                    
+ [23] "Gene expression profiles in human malignant melanoma cell lines exposed to carbon ions or X-rays"                                                                                                            
+ [24] "Genomic Profiling of Malignant Melanoma using tiling resolution array CGH"                                                                                                                                   
+ [25] "Gene expression profile of peripheral blood lymphocytes: comparison between melanoma patients and healthy controls"                                                                                          
+ [26] "63 Melanoma cell lines"                                                                                                                                                                                      
+ [27] "Melanoma cell lines involved in the p14ARF genotype analysis"                                                                                                                                                
+ [28] "Transcriptional targets of p16INK4A in melanoma"                                                                                                                                                             
+ [29] "Defective cell cycle checkpoint functions in melanoma are associated with altered patterns of gene expression"                                                                                               
+ [30] "Gene Expression Patterns Involved in the Malignant Transformation and Progression of Metastatic Melanoma"                                                                                                    
+ [31] "Human Melanoma vs Normal Human DNA"                                                                                                                                                                          
+ [32] "A comparison of DNA copy number profiling platforms using a panel of melanoma cell lines"                                                                                                                    
+ [33] "Gene Signature for Aggression of Melanoma Metastases - Melanoma Metastasis (LeiATCC)"                                                                                                                        
+ [34] "Gene Signature for Aggression of Melanoma Metastases - Melanoma Metastasis (LeiFidler)"                                                                                                                      
+ [35] "Imatinib targeting of KIT-mutant oncoprotein in melanoma"                                                                                                                                                    
+ [36] "Gene Signature for Aggression of Melanoma Metastases - Melanoma Metastasis"                                                                                                                                  
+ [37] "Evaluation of the impact of neoplastic histamine secretion on melanoma progression"                                                                                                                          
+ [38] "In vivo study of ADH-1 in combination with melphalan for treatment of melanoma"                                                                                                                              
+ [39] "Characterization of the gene expression changes associated with melanoma-endothelial cell communication"                                                                                                     
+ [40] "KINK-1, a novel small-molecule inhibitor of IKKbeta, enhances susceptibility of melanoma cells to antitumoral treatment"                                                                                     
+ [41] "Genetic alteration in recurrent melanoma"                                                                                                                                                                    
+ [42] "Genetic alteration in recurrent melanoma - part 2"                                                                                                                                                           
+ [43] "Genome-wide analysis of melanoma cell lines using high-density single-nucleotide polymorphism arrays."                                                                                                       
+ [44] "A screen to identify novel tumor suppressor genes silenced by methylation in melanoma"                                                                                                                       
+ [45] "In-transit extremity melanoma I"                                                                                                                                                                             
+ [46] "Tumor-specific Th17-polarized cells eradicate large established melanoma"                                                                                                                                    
+ [47] "In vitro study of gene expression and response to chemotherapy across 50 human-melanoma derived cell lines"                                                                                                  
+ [48] "Characterization of Primary Melanomas Using High-Resolution Array Based CGH Technology"                                                                                                                      
+ [49] "Time course RA-treatment of B16 mouse melanoma cells"                                                                                                                                                        
+ [50] "Melan-a mouse melanocytes vs. B16 mouse melanoma cells"                                                                                                                                                      
+ [51] "Melan-a melanocytes and B16 melanoma cells"                                                                                                                                                                  
+ [52] "Cell cycle dependent variation of a CD133 epitope in human embryonic stem cell, colon cancer and melanoma cell lines."                                                                                       
+ [53] "Expression profile from doxorubicine treated B16 melanoma cells"                                                                                                                                             
+ [54] "Melanoma: comparison between common nevi, radial/vertical growth phase melanoma, metastases and dysplastic nevi"                                                                                             
+ [55] "Expression data from melanoma cell lines 224 and BL transfected with siRNA-NRASQ61R"                                                                                                                         
+ [56] "Analysis of genes regulated by FoxD3 in B16-F10 mouse melanoma cells"                                                                                                                                        
+ [57] "Knockdown of CD133 in melanoma cells"                                                                                                                                                                        
+ [58] "Comparison of gene expression in melanoma of wild-type and VAP-1 -/- mice"                                                                                                                                   
+ [59] "Genome-Wide Screen of Promoter Methylation Identifies Novel Markers for Tumor Development in Melanoma"                                                                                                       
+ [60] "The effect of TIM-3 stimulation on the gene expression profile of B16-F10 melanoma cells"                                                                                                                    
+ [61] "Melanoma SK-Mel-103 cell line : control vs. treated with pIC/pIC+PEI"                                                                                                                                        
+ [62] "Metastatic potential of melanoma cells is not affected by electrochemotherapy"                                                                                                                               
+ [63] "Gene-level expression data in melanocytes and in melanoma cell lines WM1552C and A375 over-expressing miR211"                                                                                                
+ [64] "Electric pulses do not change expression profile of genes involved in development of cancer in malignant melanoma cells"                                                                                     
+ [65] "Transcriptome profiling identifies HMGA2 as a novel gene in melanoma progression"                                                                                                                            
+ [66] "Identification of new markers of cutaneous melanoma invasion"                                                                                                                                                
+ [67] "siRNA-mediated knockdown of MITF and PAX3 in metastatic melanoma cell lines"                                                                                                                                 
+ [68] "Gene expression profilling of metastatic melanoma cell lines"                                                                                                                                                
+ [69] "MicroRNA expression analysis in Uveal melanoma from formalin fixed paraffin embedded sections"                                                                                                               
+ [70] "Identification of direct transcriptional targets of V600EBRAF/MEK in melanoma"                                                                                                                               
+ [71] "Biology of human melanoma"                                                                                                                                                                                   
+ [72] "Expression data for melanoma short-term cultures and cell lines"                                                                                                                                             
+ [73] "Affymetrix SNP array data for melanoma short-term cultures and cell lines"                                                                                                                                   
+ [74] "Affymetrix 250K StyI SNP array data from PBMCs and cell lines of metastatic melanoma patients"                                                                                                               
+ [75] "Melanoma short-term cultures and cell lines: expression profiling and CNV analyses"                                                                                                                          
+ [76] "Characterization of the melanoma miRNAome by deep sequencing"                                                                                                                                                
+ [77] "miR-193b represses cell proliferation and regulates cyclin D1 in melanoma: benign nevi and metastatic melanoma"                                                                                              
+ [78] "miR-193b represses cell proliferation and regulates cyclin D1 in melanoma: Malme-3M"                                                                                                                         
+ [79] "miR-193b represses cell proliferation and regulates cyclin D1 in melanoma"                                                                                                                                   
+ [80] "MicroRNA Profiling Analysis of Differences between the Melanoma of Young Adults and Older Adults"                                                                                                            
+ [81] "Immune profile and mitotic index of metastatic melanoma lesions enhance clinical staging in predicting patient survival."                                                                                    
+ [82] "In-transit extremity melanoma II"                                                                                                                                                                            
+ [83] "MicroRNA Expression Profiles Associated with Mutational Status and Survival in Malignant Melanoma"                                                                                                           
+ [84] "Expression data from human melanoma cell lines treated or not with inflammatory cytokines"                                                                                                                   
+ [85] "Tumor-specific CD4+ T cells eradicate established melanoma"                                                                                                                                                  
+ [86] "Expression profiling of BRAFV600E melanoma cell lines upon RAF inhibition"                                                                                                                                   
+ [87] "RNA-Seq of melanoma short-term cultures and cell lines"                                                                                                                                                      
+ [88] "Agilent 244A aCGH array for breast, lung, melanoma, ovary, and prostate"                                                                                                                                     
+ [89] "A novel way for enriching human melanoma precursor cells to identify cellular targets for antineoplastic therapy"                                                                                            
+ [90] "Melanoma Cancer miRNA Blood Profiles"                                                                                                                                                                        
+ [91] "Expression analysis of melanoma harvested from GFP versus SETDB1 transgenic zebrafish (Danio rerio)"                                                                                                         
+ [92] "Gene expression profile of murine cutaneous melanoma after systemic treatment with tumor necrosis factor (TNF) associated or not with melphalan (MEL)."                                                      
+ [93] "Expression Data from Uveal Melanoma primary tumors."                                                                                                                                                         
+ [94] "Gene Experssion Profiling-Based Identification of Molecular Subtypes in Stage IV Melanoma with Different Clinical Outcome (test set)"                                                                        
+ [95] "Gene Experssion Profiling-Based Identification of Molecular Subtypes in Stage IV Melanoma with Different Clinical Outcome (validation set)"                                                                  
+ [96] "Gene Expression Profiling-Based Identification of Molecular Subtypes in Stage IV Melanoma with Different Clinical Outcome"                                                                                   
+ [97] "Gene expression data from melanoma cell lines and melanocyte controls"                                                                                                                                       
+ [98] "Clinical relevance of SKP2 alterations in metastatic melanoma"                                                                                                                                               
+ [99] "Integrative genomics identifies molecular alterations that differentiate superficial spreading and nodular melanoma"                                                                                         
+[100] "Affymetrix copy number data for melanoma cell line mapping"                                                                                                                                                  
+[101] "Interferon alpha induced gene expression in SOCS1 and SOCS3 overexpressing melanoma and hepatoma cell lines."                                                                                                
+[102] "Genome-Wide Analysis of Somatic Copy Number Alterations (CGH, SNP) and Gene Expression (RNA-seq) in Metastatic Melanoma"                                                                                     
+[103] "Genome-Wide Analysis of Somatic Copy Number Alterations and Gene Expression in Metastatic Melanoma: RNA-Seq"                                                                                                 
+[104] "Phase II trial melphalan ILI plus ADH-1 for treatment of in-transit extremity melanoma"                                                                                                                      
+[105] "Genome-Wide Analysis of Somatic Copy Number Alterations and Gene Expression in Metastatic Melanoma"                                                                                                          
+[106] "Comparison of the RNA expression profile between P-cadherin over-expressing BLM melanoma cells and empty-vector control cells"                                                                               
+[107] "Gene expression data from stage IV melanoma patients"                                                                                                                                                        
+[108] "gene expression profiling of brain metastatic melanoma cell lines"                                                                                                                                           
+[109] "Progressing vs regressing melanoma metastases"                                                                                                                                                               
+[110] "Expression data for PAR-1-positive and -negative melanoma cell lines"                                                                                                                                        
+[111] "A375 melanoma cells treated with leflunomide 25uM"                                                                                                                                                           
+[112] "Expression analysis of zebrafish melanoma and skin from the mitf-BRAFV600E;p53-/- line"                                                                                                                      
+[113] "Molecular signature of CD8+ T cell exhaustion in metastases but not in peripheral blood from melanoma patients"                                                                                              
+[114] "Expression data from melanoma cell lines"                                                                                                                                                                    
+[115] "Genome-wide copy number variation in human metastatic melanoma cell lines"                                                                                                                                   
+[116] "miR-193b Regulates Mcl-1 in Melanoma"                                                                                                                                                                        
+[117] "Expression data from melanoma cell lines"                                                                                                                                                                    
+[118] "Sox10 controls migration of melanoma cells through multiple regulatory target genes"                                                                                                                         
+[119] "miRNA profiling of Melanoma Cell lines and Normal Melanocytes"                                                                                                                                               
+[120] "Dissection of cancer cell and stromal cell-derived signals in melanoma xenografts following treatment with the stromal-targeting agent DMXAA"                                                                
+[121] "Expression analysis of human melanoma short-term culture WM451-Lu harvested after lentiviral infection with a GFP (control) or SETDB1 (experimental) viral vector"                                           
+[122] "Expression analysis of melanoma harvested after GFP or SETDB1 expression"                                                                                                                                    
+[123] "Response to immunotherapy in melanoma metastasis"                                                                                                                                                            
+[124] "VEGFR-1 expressed by malignant melanoma initiating cells is required for tumor growth"                                                                                                                       
+[125] "Ectopic activation of ARHGAP8 in melanoma promotes cell motility"                                                                                                                                            
+[126] "Gene expression profiles of Wnt-1 overexpressing melanoma"                                                                                                                                                   
+[127] "Expression data from melanoma cells grown under neural crest cell culture conditions (spheroid cells) versus under classical adherent conditions (adherent cells) - 2 different specimens of melanoma tumors"
+[128] "Gene Expression patterns in mouse B16-OVA melanoma tumors"                                                                                                                                                   
+[129] "Syntenin-1 is expressed in uveal melanoma and correlates with metastatic progression"                                                                                                                        
+[130] "A Molecular Signature Associated with Human Melanoma Brain Metastasis and Spontaneous Micrometastasis"                                                                                                       
+[131] "The histone methyltransferase SETDB1 is recurrently amplified in melanoma and accelerates its onset"                                                                                                         
+[132] "Melanoma cell culture phenotypes I"                                                                                                                                                                          
+[133] "DNA Methylation Profiling of Melanoma Cell Lines"                                                                                                                                                            
+[134] "Genome wide analysis of acral melanoma (Illumina)"                                                                                                                                                           
+[135] "Genome wide analysis of acral melanoma (Affymetrix)"                                                                                                                                                         
+[136] "Genome wide analysis of acral melanoma"                                                                                                                                                                      
+[137] "Pro-invasion metastasis drivers in early stage melanoma are oncogenes"                                                                                                                                       
+[138] "Analysis of p53 target genes in melanoma part 1"                                                                                                                                                             
+[139] "Analysis of p53 target genes in melanoma part 2"                                                                                                                                                             
+[140] "Analysis of p53 target genes in melanoma"                                                                                                                                                                    
+[141] "Expression data of A375 melanoma cells after DMSO or MLN4924 treatment from 1 hour to 24 hour"                                                                                                               
+[142] "Gene expression data from  human metastatic melanoma tumors that may predict response to RAF265"                                                                                                             
+[143] "Identification of differentially expressed genes in matched primary and metastatic melanoma tumor pairs"                                                                                                     
+[144] "A novel recurrent mutation in MITF predisposes to familial and sporadic melanoma"                                                                                                                            
+[145] "Transcriptomic analysis of the effect of CT16 (PAGE5) expression in WM-266-4 melanoma cells"                                                                                                                 
+[146] "Transcriptomic analysis of the effect of CT16 (PAGE5) silencing by RNAi in A2058 melanoma cells"                                                                                                             
+[147] "Transcriptomic analysis of CT16 (PAGE5) function in A2058 and WM-266-4 melanoma cells"                                                                                                                       
+[148] "Gene expression profile in A375 melanoma cells after 45 functionally important molecules were knocked down using siRNA"                                                                                      
+[149] "Breast, colon, glioblastoma, lung, melanoma, ovarian, pancreas, prostate tumors and cell lines."                                                                                                             
+[150] "Alterations of methylome and transcriptome in human melanoma: the inverse relationship between epigenome integrity and BRAF mutation"                                                                        
+[151] "Conduct gene profiling experiment from a melanoma cell line which silenced galectin-3 gene expression to understand different phenotypic properties observed during tumor growth"                            
+[152] "ADAR1 regulates melanoma progression via miRNAs biogenesis"                                                                                                                                                  
+[153] "Identification of Candidate Tumor Suppressor Genes Inactivated by Promoter Methylation in Melanoma"                                                                                                          
+[154] "Molecular insights on the peripheral and intra-tumoral effects of systemic high dose rIL-2 (Aldesleukin) administration for the treatment of metastatic melanoma"                                            
+[155] "Beta-catenin Controls Metastasis in Braf-activated Pten-inactivated Melanomas"                                                                                                                               
+[156] "Oncogenic BRAFV600E remodels the melanocyte transcriptome and induces BANCR to regulate melanoma cell migration [HT-seq]"                                                                                    
+[157] "Whole-transcript expression data for uveal melanoma"                                                                                                                                                         
+[158] "Analysis of a novel highly metastatic melanoma cell line identifies osteopontin as a new lymphangiogenic factor."                                                                                            
+[159] "Melanoma cell culture phenotypes II"                                                                                                                                                                         
+[160] "Melanoma cell culture phenotypes"                                                                                                                                                                            
+[161] "Comparative microarray analysis of microRNA expression profiles in primary cutaneous malignant melanoma, cutaneous malignant melanoma metastases and benign melanocytic naevi"                               
+[162] "In-transit extremity melanoma III"                                                                                                                                                                           
+[163] "Role of Apollon in human melanoma resistance to anti-tumor agents that activate the intrinsic or the extrinsic apoptosis pathways"                                                                           
+[164] "LKB1/STK11 Inactivation Leads to Expansion of Pro-Metastatic Tumor Sub-Population in Melanoma"                                                                                                               
+[165] "The metastatic microenvironment. Brain-derived soluble factors alter the malignancy phenotype of cutaneous and brain- metastasizing melanoma cells"                                                          
+[166] "Expression data from normal melanocyte, melanoma cells and their exosomes (microRNA)"                                                                                                                        
+[167] "Expression data from normal melanocyte, melanoma cells and their exosomes (mRNA)"                                                                                                                            
+[168] "Expression data from normal melanocyte, melanoma cells and their exosomes"                                                                                                                                   
+[169] "Analysis of tumor cell RNA (glioma and melanoma) and their corresponding microvesicles"                                                                                                                      
+[170] "050209-miRNA Melanoma miRNA microarray"                                                                                                                                                                      
+[171] "Identification of a predictive gene signature to recMAGE A3 antigen-specific cancer immunotherapy in metastatic melanoma and non-small-cell lung cancer"                                                     
+[172] "Parental MeWo and highly metastatic LM2 human melanoma cell line derivatives with or without miR-199a or miR-1908"                                                                                           
+[173] "Affymetrix SNP array data for a melanoma lesion and a cellline derived thereof"                                                                                                                              
+[174] "Expression data from melanoma subpopulations"                                                                                                                                                                
+[175] "Small RNA sequencing of melanoma samples to deduce microRNA expression profiles"                                                                                                                             
+[176] "Recurrent amplifications of the histone methyltransferase SETDB1 in melanoma"                                                                                                                                
+[177] "Melanoma-derived exosomes educate bone marrow progenitor cells toward a pro-metastatic phenotype through upregulation of the MET oncoprotein."                                                               
+[178] "Real-time quantitative PCR analysis of miRNA expression in human melanoma MMRU cell line after Sox4 knockdown"                                                                                               
+[179] "Profiling A375P melanoma cells following PGC1a suppression"                                                                                                                                                  
+[180] "The role of SOX10 in human melanoma"                                                                                                                                                                         
+[181] "Melanoma tissue samples from a clinical trial: no treatment vs. post-temsirolimus alone vs. post-combination temsirolimus and bevacizumab"                                                                   
+[182] "Oncogenic BRAFV600E remodels the melanocyte transcriptome and induces BANCR to regulate melanoma cell migration [Affymetrix]"                                                                                
+[183] "Gene expression profiling of enforced HOXA1 expression in melanoma cell line"                                                                                                                                
+[184] "Oncogenic BRAFV600E remodels the melanocyte transcriptome and induces BANCR to regulate melanoma cell migration"                                                                                             
+[185] "Gene copy number variations associated with patient survival in uveal melanoma"                                                                                                                              
+[186] "Loss of 5-hydroxymethylcytosine is an epigenetic hallmark of melanoma"                                                                                                                                       
+[187] "autologous pairs of cutaneous melanocyte and melanoma cell cultures"                                                                                                                                         
+[188] "Array-based Comparative Genomic Hybridization of Melanoma Cell Lines"                                                                                                                                        
+[189] "Expression data of A375 melanoma cells after DMSO or MLN4924 +/- Nutlin treatment for 26 hours"                                                                                                              
+[190] "Synthetic lethal screening with small molecule inhibitors provides a pathway to rational combination therapies for melanoma"                                                                                 
+[191] "Expression data from human melanoma specific T cell clones"                                                                                                                                                  
+[192] "Gene expression analysis of uveal melanoma tumor tissue"                                                                                                                                                     
+[193] "Comparison of the genetic extinction of NRAS to pharmacological MEK inhibition in an inducible mouse model of melanoma"                                                                                      
+[194] "A timecourse analysis of the genetic extinction of NRAS in an inducible mouse model of melanoma."                                                                                                            
+[195] "Oncogenic NRAS Signaling Differentially Regulates Survival and Proliferation in Melanoma."                                                                                                                   
+[196] "Genes Predictive of G1 arrest in Melanoma Cell Lines"                                                                                                                                                        
+[197] "Expression data from transplanted HCmel3 mouse melanomas relapsing to adoptive T-cell therapy in vivo"                                                                                                       
+[198] "Gene expression profiling of enforced HOXA1 expression in melanoma cell line (SkMel30)"                                                                                                                      
+[199] "Human melanoma cells over-express Extracellular Matrix 1 (ECM1) which is regulated in part by TFAP2C"                                                                                                        
+[200] "Chromosomal changes in primary human uveal melanomas [RPCI]"                                                                                                                                                 
+[201] "Chromosomal changes in primary human uveal melanomas [UCSF]"                                                                                                                                                 
+[202] "Chromosomal changes in primary human uveal melanomas"                                                                                                                                                        
+[203] "Gene expression profiling in anchorage-independent melanoma A375 cells"                                                                                                                                      
+[204] "Inhibition of Melanoma Growth by Small Molecules that Promote the Mitochondrial Localization of ATF2"                                                                                                        
+[205] "Expression data from FACS-sorted CD8+BTLA+ vs CD8+BTLA- Human Tumor-infiltrating Lymphocytes in Metastatic Melanoma"                                                                                         
+[206] "Studies in a murine B16 melanoma model show that persistent antigen at vaccination sites induces CD8+ T cell sequestration, dysfunction and deletion"                                                        
+[207] "Genome-wide gene expression analysis of  primary uveal melanoma cells, normal uveal melanocytes, neural crest stem cells, embryonic stem cells and uveal melanoma cell lines MUM2B and OCM1A"                
+[208] "Epigenome analysis of  primary uveal melanoma cells, normal uveal melanocytes, neural crest stem cells, embryonic stem cells and uveal melanoma cell lines"                                                  
+[209] "Karyotyping using SNP array of  primary uveal melanoma cells, normal uveal melanocytes, neural crest stem cells, embryonic stem cells and uveal melanoma cell lines MUM2B and OCM1A"                         
+[210] "Primary uveal melanoma cells, normal uveal melanocytes, neural crest stem cells, embryonic stem cells and uveal melanoma cell lines"                                                                         
+[211] "Microarray analysis of primary melanoma patient cells, melanoma cell lines, and HL cell lines"                                                                                                               
+[212] "Genome-wide promoter methylation analysis identifies epigenetic silencing of MAPK13 in primary cutaneous melanoma"                                                                                           
+[213] "Human melanoma samples comparing nevi and primary and metastatic melanoma"                                                                                                                                   
+> 
+> 
+> ###EXIT
+> warnings ()
+Warning messages:
+1: In url(url_geo_1, open = "rb") : cannot open: HTTP status was '404 Not Found'
+2: In url(url_geo_2, open = "rb") : cannot open: HTTP status was '403 Forbidden'
+> sessionInfo ()
+R version 3.0.1 (2013-05-16)
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=C                 LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] parallel  stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+[1] GEOmetadb_1.20.0   RSQLite_0.11.2     DBI_0.2-5          GEOquery_2.26.1   
+[5] Biobase_2.20.0     BiocGenerics_0.6.0
+
+loaded via a namespace (and not attached):
+[1] RCurl_1.95-4.1 XML_3.96-1.1  
+> q ("no")
+> proc.time()
+   user  system elapsed 
+ 19.957   5.312 174.713 

@@ -1,0 +1,100 @@
+
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##prueba_lectura_1.r
+> ##2015-04-127dmontaner@cipf.es
+> ##vemos velocidades de lectura
+> 
+> date ()
+[1] "Mon Apr 27 14:52:59 2015"
+> Sys.info ()[c("nodename", "user")]
+   nodename        user 
+      "lap" "dmontaner" 
+> commandArgs ()
+[1] "/usr/lib/R/bin/exec/R"                                                                                                                                            
+[2] "-f"                                                                                                                                                               
+[3] "/home/dmontaner/Documents/UV_master/mis_cursos/NOCIONES_BASICAS_2014_2015/clases_preparacion/2015_04_27_practical_local_blast/datos_simulacion/prueba_lectura_2.r"
+[4] "--restore"                                                                                                                                                        
+[5] "--save"                                                                                                                                                           
+[6] "--no-readline"                                                                                                                                                    
+[7] "--no-save"                                                                                                                                                        
+[8] "--no-restore"                                                                                                                                                     
+> rm (list = ls ())
+> R.version.string ##"R version 3.2.0 (2015-04-16)"
+[1] "R version 3.2.0 (2015-04-16)"
+> 
+> ###DATOS
+> setwd ("../data")
+> dir ()
+[1] "Homo_sapiens.GRCh38.79.gtf"                    
+[2] "Homo_sapiens.GRCh38.79.gtf.gz"                 
+[3] "Homo_sapiens.GRCh38.dna.chromosome.21.fa"      
+[4] "Homo_sapiens.GRCh38.dna.chromosome.21.fa.gz"   
+[5] "Homo_sapiens.GRCh38.dna_rm.chromosome.21.fa"   
+[6] "Homo_sapiens.GRCh38.dna_rm.chromosome.21.fa.gz"
+[7] "Homo_sapiens.GRCh38.dna_sm.chromosome.21.fa"   
+[8] "Homo_sapiens.GRCh38.dna_sm.chromosome.21.fa.gz"
+> 
+> ## ## R
+> ## system.time (gtf <- read.table (file = "Homo_sapiens.GRCh38.79.gtf", header = FALSE, sep = "\t", quote = "", as.is = TRUE))
+> ## sapply (gtf, class)
+> ## dim (gtf)
+> 
+> ## DATA TABLE
+> library (data.table)
+> system.time (gtf <- fread ("Homo_sapiens.GRCh38.79.gtf", header = FALSE, sep = "\t"))
+Read 5.1% of 2720530 rowsRead 16.9% of 2720530 rowsRead 27.9% of 2720530 rowsRead 40.1% of 2720530 rowsRead 51.1% of 2720530 rowsRead 65.4% of 2720530 rowsRead 82.0% of 2720530 rowsRead 2720530 rows and 9 (of 9) columns from 1.124 GB file in 00:00:12
+   user  system elapsed 
+ 11.280   0.244  11.550 
+> sapply (gtf, class)
+         V1          V2          V3          V4          V5          V6 
+"character" "character" "character"   "integer"   "integer" "character" 
+         V7          V8          V9 
+"character" "character" "character" 
+> dim (gtf)
+[1] 2720530       9
+> 
+> ###EXIT
+> warnings ()
+NULL
+> sessionInfo ()
+R version 3.2.0 (2015-04-16)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 14.04.2 LTS
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=es_ES.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=es_ES.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=es_ES.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=es_ES.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] data.table_1.9.4
+
+loaded via a namespace (and not attached):
+[1] plyr_1.8.2     reshape2_1.4.1 Rcpp_0.11.5    stringr_0.6.2  chron_2.3-45  
+> q ("no")
+> proc.time()
+   user  system elapsed 
+ 11.634   0.306  11.956 

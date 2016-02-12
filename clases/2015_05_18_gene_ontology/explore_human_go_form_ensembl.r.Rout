@@ -1,0 +1,254 @@
+
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##explore_human_go_form_ensembl.r
+> ##2015-05-18 dmontaner@cipf.es
+> ##We explore the distribution of GO annotation across human genes and transcripts
+> 
+> rm (list = ls ())
+> 
+> options (width = 170)
+> 
+> ###DATA GENES
+> setwd ("datos")
+> 
+> datos.gt <- read.table (file = "mart_export_gene_and_transcript.txt", header = TRUE, sep = "\t", as.is = TRUE)
+> dim (datos.gt)
+[1] 214285      2
+> datos.gt[1:3,]
+  Ensembl.Transcript.ID Ensembl.Gene.ID
+1       ENST00000387314 ENSG00000210049
+2       ENST00000389680 ENSG00000211459
+3       ENST00000387342 ENSG00000210077
+> 
+> table (duplicated (datos.gt))
+
+ FALSE 
+214285 
+> table (duplicated (datos.gt[,"Ensembl.Transcript.ID"]))  ## ok no duplicated transcript -> no transcript to more than one gene
+
+ FALSE 
+214285 
+> table (duplicated (datos.gt[,"Ensembl.Gene.ID"]))
+
+ FALSE   TRUE 
+ 65774 148511 
+> length (unique (datos.gt[,"Ensembl.Gene.ID"]))
+[1] 65774
+> 
+> 
+> ###DATA GOS
+> datos <- read.table (file = "mart_export.txt", header = TRUE, sep = "\t", as.is = TRUE, comment.char = "", quote = "\"")
+> sapply (datos, class)
+      Ensembl.Gene.ID Ensembl.Transcript.ID     GO.Term.Accession          GO.Term.Name GO.Term.Evidence.Code             GO.domain 
+          "character"           "character"           "character"           "character"           "character"           "character" 
+> dim (datos)
+[1] 1407735       6
+> colnames (datos)
+[1] "Ensembl.Gene.ID"       "Ensembl.Transcript.ID" "GO.Term.Accession"     "GO.Term.Name"          "GO.Term.Evidence.Code" "GO.domain"            
+> datos[1:3,]
+  Ensembl.Gene.ID Ensembl.Transcript.ID GO.Term.Accession                              GO.Term.Name GO.Term.Evidence.Code          GO.domain
+1 ENSG00000198888       ENST00000361390        GO:0005515                           protein binding                   IPI molecular_function
+2 ENSG00000198888       ENST00000361390        GO:0005743              mitochondrial inner membrane                   TAS cellular_component
+3 ENSG00000198888       ENST00000361390        GO:0005747 mitochondrial respiratory chain complex I                   IDA cellular_component
+> 
+> table (is.na (datos)) ## OK no missing
+
+  FALSE 
+8446410 
+> table (datos == "")   ## but many empty 
+
+  FALSE    TRUE 
+8340674  105736 
+> 
+> table (datos[,"Ensembl.Gene.ID"]       == "")  ## OK no missing
+
+  FALSE 
+1407735 
+> table (datos[,"Ensembl.Transcript.ID"] == "")  ## OK no missing
+
+  FALSE 
+1407735 
+> table (datos[,"GO.Term.Accession"]     == "")  ##  some missing
+
+  FALSE    TRUE 
+1381301   26434 
+> 
+> ## KEEP just the rows with annotation
+> touse <- datos[,"GO.Term.Accession"] != ""
+> table (touse)
+touse
+  FALSE    TRUE 
+  26434 1381301 
+> datos <- datos[touse,]
+> dim (datos)
+[1] 1381301       6
+> datos[1:10,]
+   Ensembl.Gene.ID Ensembl.Transcript.ID GO.Term.Accession                                         GO.Term.Name GO.Term.Evidence.Code          GO.domain
+1  ENSG00000198888       ENST00000361390        GO:0005515                                      protein binding                   IPI molecular_function
+2  ENSG00000198888       ENST00000361390        GO:0005743                         mitochondrial inner membrane                   TAS cellular_component
+3  ENSG00000198888       ENST00000361390        GO:0005747            mitochondrial respiratory chain complex I                   IDA cellular_component
+4  ENSG00000198888       ENST00000361390        GO:0006120 mitochondrial electron transport, NADH to ubiquinone                   NAS biological_process
+5  ENSG00000198888       ENST00000361390        GO:0008137             NADH dehydrogenase (ubiquinone) activity                   NAS molecular_function
+6  ENSG00000198888       ENST00000361390        GO:0016021                       integral component of membrane                   IEA cellular_component
+7  ENSG00000198888       ENST00000361390        GO:0022904                 respiratory electron transport chain                   TAS biological_process
+8  ENSG00000198888       ENST00000361390        GO:0031966                               mitochondrial membrane                   IDA cellular_component
+9  ENSG00000198888       ENST00000361390        GO:0044237                           cellular metabolic process                   TAS biological_process
+10 ENSG00000198888       ENST00000361390        GO:0044281                     small molecule metabolic process                   TAS biological_process
+> 
+> ################################################################################
+> 
+> ## annotated genes
+> all.genes <- unique (datos.gt[,"Ensembl.Gene.ID"])
+> ann.genes <- unique (datos[,"Ensembl.Gene.ID"])
+> 
+> length (all.genes)
+[1] 65774
+> length (ann.genes)
+[1] 20776
+> 
+> 100 * table (all.genes %in% ann.genes) / length (all.genes) ##31 % annotation in genes
+
+   FALSE     TRUE 
+68.41305 31.58695 
+> 
+> ## annotated transcripts
+> all.transcripts <- unique (datos.gt[,"Ensembl.Transcript.ID"])
+> ann.transcripts <- unique (datos[,"Ensembl.Transcript.ID"])
+> 
+> length (all.transcripts)
+[1] 214285
+> length (ann.transcripts)
+[1] 75005
+> 
+> 100 * table (all.transcripts %in% ann.transcripts) / length (all.transcripts) ##35 % annotation in genes
+
+   FALSE     TRUE 
+64.99755 35.00245 
+> 
+> ################################################################################
+> 
+> ## evidence code distribution
+> table (datos[,"GO.Term.Evidence.Code"])
+
+   EXP    IBA     IC    IDA    IEA    IEP    IGI    IMP    IPI    ISS    NAS     ND    TAS 
+   224  21849   2743 142387 973867   2179   1475  30474  28273  44714  16598   4106 112412 
+> 
+> ## remove duplicated annotations
+> gene2go <- unique (datos[,c("Ensembl.Gene.ID", "GO.Term.Accession", "GO.domain")])
+> dim (gene2go)
+[1] 474671      3
+> gene2go[1:10,]
+   Ensembl.Gene.ID GO.Term.Accession          GO.domain
+1  ENSG00000198888        GO:0005515 molecular_function
+2  ENSG00000198888        GO:0005743 cellular_component
+3  ENSG00000198888        GO:0005747 cellular_component
+4  ENSG00000198888        GO:0006120 biological_process
+5  ENSG00000198888        GO:0008137 molecular_function
+6  ENSG00000198888        GO:0016021 cellular_component
+7  ENSG00000198888        GO:0022904 biological_process
+8  ENSG00000198888        GO:0031966 cellular_component
+9  ENSG00000198888        GO:0044237 biological_process
+10 ENSG00000198888        GO:0044281 biological_process
+> 
+> ## gene annotation ontology percent
+> table (gene2go[,"GO.domain"])
+
+biological_process cellular_component molecular_function 
+            212547             156001             106123 
+> 100 * table (gene2go[,"GO.domain"]) / nrow (gene2go)
+
+biological_process cellular_component molecular_function 
+          44.77775           32.86508           22.35717 
+> 
+> ## go ontology percent
+> doms <- unique (datos[,c("GO.Term.Accession", "GO.domain")])
+> table (doms[,"GO.domain"])
+
+biological_process cellular_component molecular_function 
+             10343               1336               3724 
+> table (doms[,"GO.domain"]) / nrow (doms)
+
+biological_process cellular_component molecular_function 
+        0.67149257         0.08673635         0.24177108 
+> 
+> ## distribution of the number of annotations
+> ta <- as.data.frame (table (gene2go[,"Ensembl.Gene.ID"]))
+> ta[1:10,]
+              Var1 Freq
+1  ENSG00000000003   13
+2  ENSG00000000005   15
+3  ENSG00000000419   36
+4  ENSG00000000457   21
+5  ENSG00000000938   64
+6  ENSG00000000971   18
+7  ENSG00000001036   21
+8  ENSG00000001084   50
+9  ENSG00000001167   31
+10 ENSG00000001460    9
+> summary (ta[,2])
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   1.00   11.00   19.00   22.85   29.00  267.00 
+> boxplot (ta[,2])
+> 
+> ################################################################################
+> 
+> ## genes related to apoptosis
+> pos <- grep ("apoptosis", datos[,"GO.Term.Name"])
+> 
+> apo <- unique (datos[pos, c("GO.Term.Accession", "GO.Term.Name")])
+> apo
+        GO.Term.Accession                                                                                         GO.Term.Name
+37162          GO:0006921                              cellular component disassembly involved in execution phase of apoptosis
+59241          GO:0097194                                                                         execution phase of apoptosis
+135013         GO:1900118                                                  negative regulation of execution phase of apoptosis
+212649         GO:1900119                                                  positive regulation of execution phase of apoptosis
+377070         GO:2001271 negative regulation of cysteine-type endopeptidase activity involved in execution phase of apoptosis
+477386         GO:0097200                        cysteine-type endopeptidase activity involved in execution phase of apoptosis
+764062         GO:1900117                                                           regulation of execution phase of apoptosis
+1014734        GO:0060785                                               regulation of apoptosis involved in tissue homeostasis
+> 
+> cat (apo[,"GO.Term.Accession"], sep = "\n")
+GO:0006921
+GO:0097194
+GO:1900118
+GO:1900119
+GO:2001271
+GO:0097200
+GO:1900117
+GO:0060785
+> 
+> ###EXIT
+> warnings ()
+NULL
+> sessionInfo ()
+R version 3.2.0 (2015-04-16)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 14.04.2 LTS
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=es_ES.UTF-8        LC_COLLATE=en_US.UTF-8     LC_MONETARY=es_ES.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=es_ES.UTF-8       LC_NAME=C                  LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=es_ES.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+> q ("no")
+> proc.time()
+   user  system elapsed 
+ 38.334   0.163  38.505 

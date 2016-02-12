@@ -1,0 +1,453 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <meta name="author" content="Nociones Básicas de Bioinformática y Genómica  Máster en Bioinformática, Universidad de Valencia" />
+  <title>Practical session with BLAST: local blast</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style>
+  
+  html {
+      color:#000;
+      background:#FFF;
+  }
+  
+  body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td {
+      margin:0;
+      padding:0;
+  }
+  
+  table {
+      border-spacing:0;
+      font-size:inherit;
+      font:100%;
+      /*max-width:100%;*/
+      background-color:transparent;
+      border:1px solid #DDD;
+      border-left:0;
+      border-collapse:collapsed;
+      -webkit-border-radius:4px;
+      -moz-border-radius:4px;
+      border-radius:4px;
+  }
+  
+  fieldset,img {
+      border:0;
+  }
+  
+  address,caption,cite,code,dfn,em,strong,th,var {
+      font-style:normal;
+      font-weight:400;
+  }
+  
+  ol,ul {
+      list-style:none;
+  }
+  
+  caption,th {
+      text-align:left;
+  }
+  
+  h1,h2,h3,h4,h5,h6 {
+      font-size:100%;
+      font-weight:400;
+      color:#20639b;
+      margin:1em 0;
+  }
+  
+  q:before,q:after {
+      content:'';
+  }
+  
+  abbr,acronym {
+      border:0;
+      font-variant:normal;
+      border-bottom:1px dotted #000;
+      cursor:help;
+  }
+  
+  sup {
+      vertical-align:text-top;
+  }
+  
+  sub {
+      vertical-align:text-bottom;
+  }
+  
+  input,textarea,select {
+      font-family:inherit;
+      font-weight:inherit;
+      font-size:100%;
+  }
+  
+  legend {
+      color:#000;
+  }
+  
+  h1,h2,h3,h4,h5,h6,strong {
+      font-weight:700;
+  }
+  
+  em {
+      font-style:italic;
+  }
+  
+  blockquote,ul,ol,dl {
+      margin:1em;
+      /*font-style:italic;*/
+  }
+  
+  ol,ul,dl {
+      margin-left:2em;
+  }
+  
+  ol {
+      list-style:decimal outside;
+  }
+  
+  ul {
+      list-style:disc outside;
+  }
+  
+  dl dd {
+      margin-left:1em;
+  }
+  
+  th,td {
+      line-height:1.125em;
+      text-align:left;
+      vertical-align:top;
+      border-top:1px solid #DDD;
+      border-left:1px solid #DDD;
+      padding:.5em;
+  }
+  
+  th {
+      font-weight:700;
+      text-align:center;
+      color:#20639b;
+  }
+  
+  table thead:first-child tr:first-child th,table tbody:first-child tr:first-child th,table tbody:first-child tr:first-child td {
+      border-top:0;
+  }
+  
+  table thead:first-child tr:first-child th:first-child,table tbody:first-child tr:first-child td:first-child {
+      -webkit-border-radius:4px 0 0 0;
+      -moz-border-radius:4px 0 0;
+      border-radius:4px 0 0 0;
+  }
+  
+  table thead:first-child tr:first-child th:last-child,table tbody:first-child tr:first-child td:last-child {
+      -webkit-border-radius:0 4px 0 0;
+      -moz-border-radius:0 4px 0 0;
+      border-radius:0 4px 0 0;
+  }
+  
+  table thead:last-child tr:last-child th:first-child,table tbody:last-child tr:last-child td:first-child {
+      -webkit-border-radius:0 0 0 4px;
+      -moz-border-radius:0 0 0 4px;
+      border-radius:0 0 0 4px;
+  }
+  
+  table thead:last-child tr:last-child th:last-child,table tbody:last-child tr:last-child td:last-child {
+      -webkit-border-radius:0 0 4px 0;
+      -moz-border-radius:0 0 4px;
+      border-radius:0 0 4px 0;
+  }
+  
+  table tbody tr:nth-child(odd) td,table tbody tr:nth-child(odd) th {
+      background-color:#f9f9f9;
+  }
+  
+  caption {
+      margin-bottom:.5em;
+      text-align:center;
+  }
+  
+  p,fieldset,table,pre {
+      margin-top:.5em;
+      margin-bottom:.5em;
+  }
+  
+  body {
+      font:16px/1.4 "Helvetica Neue", Helvetica, "Open Sans", Arial, sans-serif;
+      color:#333;
+      /*max-width:960px;*/
+      /*margin:0 auto;*/
+      margin:1em;
+  }
+  
+  pre,code,kbd,samp,tt {
+      font-family:monospace;
+      font-size:90%;
+      line-height:100%;
+  }
+  
+  h1 {
+      font-size:200%;
+      border-bottom:2px dotted #ddd;
+  }
+  
+  a,a:visited,code {
+      /*color:#f06024;*/
+      color:#20639b;
+  }
+  
+  a:link {text-decoration:none;}    /* unvisited link */
+  a:visited {text-decoration:none;} /* visited link */
+  a:hover {text-decoration:underline;}   /* mouse over link */
+  a:active {text-decoration:underline;}  /* selected link */
+  
+  
+  h2 {
+      font-size:160%;
+  }
+  
+  h3 {
+      font-size:120%;
+  }
+  
+  h4 {
+      font-size:110%;
+  }
+  
+  h5 {
+      font-size:95%;
+  }
+  
+  h6 {
+      font-size:90%;
+      color:#999;
+  }
+  
+  dl {
+      margin:0 0 1.125em;
+  }
+  
+  dt {
+      font-weight:700;
+      line-height:1.125em;
+  }
+  
+  dd {
+      margin-left:1em;
+      line-height:1.125em;
+  }
+  
+  pre,blockquote {
+      border:1px solid #ddd;
+      background-color:#f1f1f1;
+      -webkit-border-radius:6px;
+      -moz-border-radius:6px;
+      border-radius:6px;
+      padding:10px;
+  }
+  
+  blockquote {
+      margin:1em 2.5em;
+  }
+  
+  code {
+      color:#20639b;
+      background:#f1f1f1;
+      line-height:1.5em;
+  }
+  
+  img {
+      max-width:100%;
+  }
+  
+  ol[type=1] {
+      list-style-type:decimal;
+  }
+  
+  ol[type=a] {
+      list-style-type:lower-alpha;
+  }
+  
+  ol[type=A] {
+      list-style-type:upper-alpha;
+  }
+  
+  ol[type=I] {
+      list-style-type:upper-roman;
+  }
+  
+  ol[type=i] {
+      list-style-type:lower-roman;
+  }
+  
+  
+  
+  h1.title {
+          font-size: 200%;
+          font-weight: bold;
+          padding-top: 0.2em;
+          /*padding-bottom: 0.2em;*/
+          text-align: center;
+          border: none;
+  }
+  
+  h2.author {
+          font-size: 100%;
+          text-align: center;
+          border: none;
+  }
+  
+  h3.date {
+          font-size: 75%;
+          text-align: center;
+          border: none;
+          font-style:italic;
+          font-weight: bold;
+  }
+  
+  /* animated spoiler CSS by Bloggersentral.com */
+  .spoilerbutton {
+  	display:block;
+  	margin:5px 0;
+  	padding: 3px 6px;
+  	color: #20639b;
+  	font-size: small;
+  	font-weight: bold;
+  }
+  .spoiler {overflow:hidden;background: #f5f5f5;}
+  .spoiler > div {-webkit-transition: all 0.2s ease;-moz-transition: margin 0.2s ease;-o-transition: all 0.2s ease;transition: margin 0.2s ease;}
+  .spoilerbutton[value="Show answer"] + .spoiler > div {margin-top:-100%;}
+  .spoilerbutton[value="Hide answer"] + .spoiler {padding:5px;} 
+  /**********************************************/
+  
+  </style>
+</head>
+<body>
+<div id="header">
+<h1 class="title">Practical session with BLAST: local blast</h1>
+<h2 class="author">Nociones Básicas de Bioinformática y Genómica <br> <em><a href="http://www.uv.es/bioinfor/">Máster en Bioinformática, Universidad de Valencia</a></em></h2>
+<h3 class="date"><a href="http://www.dmontaner.com">David Montaner</a> <br> <em>2015-04-20</em></h3>
+</div>
+<hr>
+<div id="TOC">
+<ul>
+<li><a href="#preliminaries">Preliminaries</a><ul>
+<li><a href="#software-used-in-this-practical">Software used in this practical</a></li>
+</ul></li>
+<li><a href="#exercise-1">Exercise 1</a><ul>
+<li><a href="#indexing">Indexing</a></li>
+<li><a href="#aligning">Aligning</a></li>
+<li><a href="#output-format">Output format</a></li>
+</ul></li>
+<li><a href="#exercise-2">Exercise 2</a></li>
+<li><a href="#exercise-3">Exercise 3</a></li>
+<li><a href="#exercise-4">Exercise 4</a></li>
+</ul>
+</div>
+<hr>
+<!--
+Clean the starting dataset
+================================================================================
+#    rm -r data/*
+#    cp data0/f* data/
+#    cd data
+-->
+<h1 id="preliminaries">Preliminaries</h1>
+<p>The file <code>mytranscripts.fa</code> in the <code>datos</code> folder contains the sequences from several <strong>human</strong> transcripts of the same gene. The gene is located in <strong>chromosome 21</strong>.</p>
+<p>We will download the genomic sequence from the <a href="http://www.ensembl.org/" title="Ensembl home">Ensembl</a> home page and use it to find the location of the different transcripts using BLAST.</p>
+<h2 id="software-used-in-this-practical">Software used in this practical</h2>
+<p><strong>BLAST:</strong></p>
+<ul>
+<li>makeblastdb</li>
+<li>blastn</li>
+<li>blast_formatter</li>
+</ul>
+<p>You can download it from the web page:<br /><a href="http://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&amp;PAGE_TYPE=BlastDocs&amp;DOC_TYPE=Download" class="uri">http://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&amp;PAGE_TYPE=BlastDocs&amp;DOC_TYPE=Download</a></p>
+<p>Some more information on running BLAST may be found at:<br /><a href="http://www.ncbi.nlm.nih.gov/guide/howto/run-blast-local/" class="uri">http://www.ncbi.nlm.nih.gov/guide/howto/run-blast-local/</a></p>
+<h1 id="exercise-1">Exercise 1</h1>
+<p>Find out the reference genome (<strong>just chromosome 21</strong> for the practical) from the <a href="http://www.ensembl.org/" title="Ensembl home">Ensembl</a> web page.</p>
+<p><a href="http://www.ensembl.org/info/data/ftp/index.html">Here</a> you can find summary index for the genomic information of the most relevant species.</p>
+<p>Find out the human sequences of the chromosomes in the <a href="http://www.ensembl.org/info/data/ftp/index.html">ftpsite</a>.</p>
+<ul>
+<li><p>Why are there <strong>3 files</strong> containing the sequence of <strong>chromosome 21</strong>?<br /> Download them and find out the differences.<br /> <strong>Hint</strong> read the <a href="ftp://ftp.ensembl.org/pub/release-79/fasta/homo_sapiens/dna/README">README</a> file; use the Linux command <code>colordiff</code>.</p></li>
+<li><p>What is it in the <a href="ftp://ftp.ensembl.org/pub/release-79/fasta/homo_sapiens/dna/CHECKSUMS">CHECKSUMS</a> file in the <em>ftp site</em>?<br /> Use <code>md5sum</code> to be sure that your file is properly downloaded.</p></li>
+</ul>
+<p>We will use the <em>unmasked</em> genomic sequence for the practical.</p>
+<p>In this practical we will <strong>rename</strong> the downloaded reference file as <code>hsa_21.fa</code></p>
+<h2 id="indexing">Indexing</h2>
+<p>First we need to index the downloaded fasta file so that BLAST can run locally:</p>
+<pre><code>makeblastdb -in hsa_21.fa -dbtype nucl </code></pre>
+<ul>
+<li>Which files have been generated?</li>
+<li>What does it mean the <code>-dbtype</code> option?</li>
+</ul>
+<h2 id="aligning">Aligning</h2>
+<p>Now we can run nucleotide BLAST against the created database</p>
+<pre><code>blastn -db hsa_21.fa -query mytranscripts.fa -out salida</code></pre>
+<ul>
+<li>See the generated files.</li>
+<li>Which is the output format of the created file?<br /> Remember you can use <code>blastn -help</code> to get a detailed description of the command… including the many possible output formats.</li>
+</ul>
+<h2 id="output-format">Output format</h2>
+<p>You can choose a different output file format using the option <code>-outfmt</code>. For instance an <em>XML</em> format:</p>
+<pre><code>blastn -db hsa_21.fa -query mytranscripts.fa -out salida5 -outfmt 5</code></pre>
+<p>Or a <em>tabular</em> one:</p>
+<pre><code>blastn -db hsa_21.fa -query mytranscripts.fa -out salida6 -outfmt 6
+blastn -db hsa_21.fa -query mytranscripts.fa -out salida7 -outfmt 7</code></pre>
+<ul>
+<li>How are they different the 6 and 7 formats?</li>
+<li>Can you guess which are the columns in output format 6 by looking at output format 7?</li>
+<li>What happen if you do not set the <code>-out</code> parameter?</li>
+<li>Try to <em>pipe</em> (|) the output and use the Linux command <code>cut</code> to extract just few columns of the tabular format, for instance the <em>chromosome</em> and the start and end position of the alignment over the genome. <!-- blastn -db hsa_21.fa -query mytranscripts.fa -outfmt 6 | cut -f 2,9,10 --></li>
+</ul>
+<h1 id="exercise-2">Exercise 2</h1>
+<p>Generate an alignment in <strong>ASN.1</strong> format and use the command <code>blast_formatter</code> to convert it into <em>XML</em> and <em>tabular</em> formats.</p>
+<ul>
+<li>Why are there two possible options to get <strong>ASN.1</strong> outputs indicated in the <code>blastn -help</code>?</li>
+</ul>
+<p>Use the shell command <code>diff</code> or <code>colordiff</code> to see if the converted file is the same as the originally created in those formats.</p>
+<ul>
+<li>Do you need to use the option <code>-rid</code>? Why?</li>
+</ul>
+<!--
+    blastn -db hsa_21.fa -query mytranscripts.fa -out salida11 -outfmt 11
+    blastn -db hsa_21.fa -query mytranscripts.fa -out salida9  -outfmt 9
+    blast_formatter -archive salida11 -outfmt 6 -out my_tab_blast.txt
+-->
+<p>Compare the sizes of the generated files including the binary and text <strong>ASN.1</strong> formats.</p>
+<ul>
+<li>Can you pipe the output of the <code>blast_formatter</code> command?</li>
+<li>Would that be useful sometime?</li>
+</ul>
+<h1 id="exercise-3">Exercise 3</h1>
+<p>Use <code>R</code> to explore how many exons are there in each analyzed transcript.</p>
+<h1 id="exercise-4">Exercise 4</h1>
+<p>Go to <a href="http://www.ensembl.org/biomart/">biomart</a> and download the sequences of all 21 chromosome human transcripts form the <a href="http://www.ensembl.org/Help/Faq?id=152">HAVANA</a> dataset.<br /><strong>Hint</strong>: use <em>biomart filters</em> here.</p>
+<p>Align them using blast to the 21 chromosome sequence.</p>
+<!-- 
+    time blastn -db hsa_21.fa -query havana_21.fa -out salida_havana -outfmt 9
+    time blastn -db hsa_21.fa -query havana_21.fa > salida
+-->
+<p>Use <code>time</code> to find out how long does it take.</p>
+<p>Use <code>htop</code> to find out how many processors is your machine using.</p>
+<p>Try to increase the number of <em>threads</em> changing the parameters of the blast command. Does it increase performance?</p>
+<!--
+NOT MUCH:
+See:
+http://seqanswers.com/forums/showthread.php?t=23166
+http://voorloopnul.com/blog/how-to-correctly-speed-up-blast-using-num_threads/
+
+    time blastn -db hsa_21.fa -query havana_21.fa -num_threads 4 > salida
+    time blastn -db hsa_21.fa -query havana_21.fa -num_threads 4 -max_target_seqs 1 > salida 
+-->
+<hr />
+<p><strong>The process may take a long time…</strong></p>
+<p>Send the same data to the NCBI blast web page and see whether it is quicker.</p>
+<p>Use <code>head</code> and <em>pipe</em> (|) to the blast command to guess how long your local alignment is going to take in your computer…</p>
+<pre><code>head -n 1000 havana_21.fa | grep &quot;&gt;&quot;
+head -n 100 havana_21.fa | grep &quot;&gt;&quot;
+
+time head -n 100  havana_21.fa | blastn -db hsa_21.fa -outfmt 6 -out salida_small
+time head -n 1000 havana_21.fa | blastn -db hsa_21.fa -outfmt 6 -out salida_small</code></pre>
+</body>
+</html>

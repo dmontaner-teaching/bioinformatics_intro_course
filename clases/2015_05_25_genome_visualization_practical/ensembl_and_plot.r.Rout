@@ -1,0 +1,655 @@
+
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##' ensembl_and_plot.r
+> ##' 2013-06-03 dmontaner@cipf.es
+> ##' 2014-05-12 dmontaner@cipf.es
+> ##' Format data form Ensembl and draw transcripts from SMN1
+> ##'
+> ##' -------------------------------------------------------
+> 
+> rm (list = ls ())
+> 
+> ### READ DATA
+> setwd ("datos") # Set the working directory
+> dir ()
+[1] "mart_export_exons.txt.gz" "mart_export_genes.txt.gz"
+> 
+> ##system.time (exons <- read.table (file = "mart_export_exons.txt", header = TRUE, sep = "\t", quote = "", as.is = TRUE))
+> system.time (exons <- read.table (file = "mart_export_exons.txt.gz", header = TRUE, sep = "\t", quote = "", as.is = TRUE))
+   user  system elapsed 
+ 11.723   0.061  11.776 
+> class (exons)
+[1] "data.frame"
+> dim (exons)
+[1] 1269766       7
+> sapply (exons, class)
+      Ensembl.Gene.ID Ensembl.Transcript.ID   Exon.Chr.Start..bp. 
+          "character"           "character"             "integer" 
+    Exon.Chr.End..bp.       Ensembl.Exon.ID       Chromosome.Name 
+            "integer"           "character"           "character" 
+               Strand 
+            "integer" 
+> exons[1:10,]
+   Ensembl.Gene.ID Ensembl.Transcript.ID Exon.Chr.Start..bp. Exon.Chr.End..bp.
+1  ENSG00000210049       ENST00000387314                 577               647
+2  ENSG00000211459       ENST00000389680                 648              1601
+3  ENSG00000210077       ENST00000387342                1602              1670
+4  ENSG00000210082       ENST00000387347                1671              3229
+5  ENSG00000209082       ENST00000386347                3230              3304
+6  ENSG00000198888       ENST00000361390                3307              4262
+7  ENSG00000210100       ENST00000387365                4263              4331
+8  ENSG00000210107       ENST00000387372                4329              4400
+9  ENSG00000210112       ENST00000387377                4402              4469
+10 ENSG00000198763       ENST00000361453                4470              5511
+   Ensembl.Exon.ID Chromosome.Name Strand
+1  ENSE00001544501              MT      1
+2  ENSE00001544499              MT      1
+3  ENSE00001544498              MT      1
+4  ENSE00001544497              MT      1
+5  ENSE00002006242              MT      1
+6  ENSE00001435714              MT      1
+7  ENSE00001993597              MT      1
+8  ENSE00001544494              MT     -1
+9  ENSE00001544493              MT      1
+10 ENSE00001435686              MT      1
+> 
+> genes <- read.table (file = "mart_export_genes.txt.gz", header = TRUE, sep = "\t", quote = "", as.is = TRUE)
+> dim (genes)
+[1] 65888     2
+> sapply (genes, class)
+Ensembl.Gene.ID     HGNC.symbol 
+    "character"     "character" 
+> genes[1:10,]
+   Ensembl.Gene.ID HGNC.symbol
+1  ENSG00000210049       MT-TF
+2  ENSG00000211459     MT-RNR1
+3  ENSG00000210077       MT-TV
+4  ENSG00000210082     MT-RNR2
+5  ENSG00000209082      MT-TL1
+6  ENSG00000198888      MT-ND1
+7  ENSG00000210100       MT-TI
+8  ENSG00000210107       MT-TQ
+9  ENSG00000210112       MT-TM
+10 ENSG00000198763      MT-ND2
+> 
+> 
+> 
+> ### COMBINE the two data.frames
+> datos <- merge (exons, genes)
+> dim (datos)
+[1] 1270069       8
+> datos[1:10,]
+   Ensembl.Gene.ID Ensembl.Transcript.ID Exon.Chr.Start..bp. Exon.Chr.End..bp.
+1  ENSG00000000003       ENST00000494424           100636793         100637104
+2  ENSG00000000003       ENST00000373020           100628670         100629986
+3  ENSG00000000003       ENST00000614008           100632063         100632068
+4  ENSG00000000003       ENST00000494424           100639945         100639991
+5  ENSG00000000003       ENST00000614008           100636793         100637104
+6  ENSG00000000003       ENST00000494424           100633442         100633539
+7  ENSG00000000003       ENST00000373020           100635178         100635252
+8  ENSG00000000003       ENST00000373020           100635558         100635746
+9  ENSG00000000003       ENST00000614008           100635558         100635746
+10 ENSG00000000003       ENST00000494424           100635558         100635746
+   Ensembl.Exon.ID Chromosome.Name Strand HGNC.symbol
+1  ENSE00001863395               X     -1      TSPAN6
+2  ENSE00001459322               X     -1      TSPAN6
+3  ENSE00003731560               X     -1      TSPAN6
+4  ENSE00001828996               X     -1      TSPAN6
+5  ENSE00001863395               X     -1      TSPAN6
+6  ENSE00001895484               X     -1      TSPAN6
+7  ENSE00003654571               X     -1      TSPAN6
+8  ENSE00003662440               X     -1      TSPAN6
+9  ENSE00003733424               X     -1      TSPAN6
+10 ENSE00003512331               X     -1      TSPAN6
+> 
+> colnames (genes)
+[1] "Ensembl.Gene.ID" "HGNC.symbol"    
+> colnames (exons)
+[1] "Ensembl.Gene.ID"       "Ensembl.Transcript.ID" "Exon.Chr.Start..bp."  
+[4] "Exon.Chr.End..bp."     "Ensembl.Exon.ID"       "Chromosome.Name"      
+[7] "Strand"               
+> colnames (datos)
+[1] "Ensembl.Gene.ID"       "Ensembl.Transcript.ID" "Exon.Chr.Start..bp."  
+[4] "Exon.Chr.End..bp."     "Ensembl.Exon.ID"       "Chromosome.Name"      
+[7] "Strand"                "HGNC.symbol"          
+> 
+> 
+> 
+> ###SELECT ROWS for SMN1
+> #sm.dat <- datos[datos$HGNC.symbol == "SMN1",]  ##make a small dataset just for SMN1
+> rows.touse <- datos[,"HGNC.symbol"] == "SMN1"
+> table (rows.touse)
+rows.touse
+  FALSE    TRUE 
+1269921     148 
+> 
+> sm.dat <- datos[rows.touse,]  ##make a small dataset just for SMN1
+> sm.dat
+        Ensembl.Gene.ID Ensembl.Transcript.ID Exon.Chr.Start..bp.
+811550  ENSG00000172062       ENST00000507905            70944658
+811551  ENSG00000172062       ENST00000380707            70938839
+811552  ENSG00000172062       ENST00000507905            70942718
+811553  ENSG00000172062       ENST00000506163            70925095
+811554  ENSG00000172062       ENST00000380707            70952439
+811555  ENSG00000172062       ENST00000507905            70944449
+811556  ENSG00000172062       ENST00000351205            70942358
+811557  ENSG00000172062       ENST00000513228            70942518
+811558  ENSG00000172062       ENST00000380707            70925030
+811559  ENSG00000172062       ENST00000380707            70942718
+811560  ENSG00000172062       ENST00000506239            70942358
+811561  ENSG00000172062       ENST00000380707            70951941
+811562  ENSG00000172062       ENST00000506163            70944658
+811563  ENSG00000172062       ENST00000351205            70942718
+811564  ENSG00000172062       ENST00000506239            70941389
+811565  ENSG00000172062       ENST00000513228            70946066
+811566  ENSG00000172062       ENST00000351205            70951941
+811567  ENSG00000172062       ENST00000506163            70942718
+811568  ENSG00000172062       ENST00000506239            70938839
+811569  ENSG00000172062       ENST00000351205            70944658
+811570  ENSG00000172062       ENST00000380707            70946066
+811571  ENSG00000172062       ENST00000351205            70946066
+811572  ENSG00000172062       ENST00000507905            70946066
+811573  ENSG00000172062       ENST00000507905            70942508
+811574  ENSG00000172062       ENST00000506239            70946707
+811575  ENSG00000172062       ENST00000351205            70941389
+811576  ENSG00000172062       ENST00000506163            70952439
+811577  ENSG00000172062       ENST00000506163            70946066
+811578  ENSG00000172062       ENST00000625245            70925104
+811579  ENSG00000172062       ENST00000506239            70942718
+811580  ENSG00000172062       ENST00000514951            70941389
+811581  ENSG00000172062       ENST00000380707            70942358
+811582  ENSG00000172062       ENST00000506239            70952439
+811583  ENSG00000172062       ENST00000625245            70946066
+811584  ENSG00000172062       ENST00000506239            70944658
+811585  ENSG00000172062       ENST00000625245            70942718
+811586  ENSG00000172062       ENST00000510679            70951941
+811587  ENSG00000172062       ENST00000503079            70941389
+811588  ENSG00000172062       ENST00000625245            70942358
+811589  ENSG00000172062       ENST00000514951            70925056
+811590  ENSG00000172062       ENST00000351205            70938839
+811591  ENSG00000172062       ENST00000518504            70942472
+811592  ENSG00000172062       ENST00000513228            70942718
+811593  ENSG00000172062       ENST00000510679            70952439
+811594  ENSG00000172062       ENST00000514951            70942718
+811595  ENSG00000172062       ENST00000510679            70953182
+811596  ENSG00000172062       ENST00000510679            70946089
+811597  ENSG00000172062       ENST00000503079            70946066
+811598  ENSG00000172062       ENST00000380707            70944658
+811599  ENSG00000172062       ENST00000625245            70941389
+811600  ENSG00000172062       ENST00000351205            70925104
+811601  ENSG00000172062       ENST00000380707            70941389
+811602  ENSG00000172062       ENST00000514951            70946066
+811603  ENSG00000172062       ENST00000518504            70946066
+811604  ENSG00000172062       ENST00000506239            70946066
+811605  ENSG00000172062       ENST00000518504            70942718
+811606  ENSG00000172062       ENST00000503079            70942718
+811607  ENSG00000172062       ENST00000625245            70938839
+811608  ENSG00000172062       ENST00000514951            70938839
+811609  ENSG00000172062       ENST00000506163            70941389
+811610  ENSG00000172062       ENST00000513228            70944658
+811611  ENSG00000172062       ENST00000625245            70946707
+811612  ENSG00000172062       ENST00000503079            70938839
+811613  ENSG00000172062       ENST00000506163            70942358
+811614  ENSG00000172062       ENST00000506239            70925075
+811615  ENSG00000172062       ENST00000506163            70938839
+811616  ENSG00000172062       ENST00000503079            70942358
+811617  ENSG00000172062       ENST00000503079            70925030
+811618  ENSG00000172062       ENST00000625245            70944658
+811619  ENSG00000172062       ENST00000503079            70951941
+811620  ENSG00000172062       ENST00000514951            70944658
+811621  ENSG00000172062       ENST00000514951            70951941
+1217696 ENSG00000275349       ENST00000630432            70286487
+1217697 ENSG00000275349       ENST00000628353            70285158
+1217698 ENSG00000275349       ENST00000628353            70289835
+1217699 ENSG00000275349       ENST00000631131            70295709
+1217700 ENSG00000275349       ENST00000628353            70268843
+1217701 ENSG00000275349       ENST00000628353            70286127
+1217702 ENSG00000275349       ENST00000628353            70286487
+1217703 ENSG00000275349       ENST00000629122            70296207
+1217704 ENSG00000275349       ENST00000628043            70286127
+1217705 ENSG00000275349       ENST00000628043            70286487
+1217706 ENSG00000275349       ENST00000628353            70288427
+1217707 ENSG00000275349       ENST00000628043            70289835
+1217708 ENSG00000275349       ENST00000622739            70286127
+1217709 ENSG00000275349       ENST00000622158            70285158
+1217710 ENSG00000275349       ENST00000628353            70296207
+1217711 ENSG00000275349       ENST00000622739            70286487
+1217712 ENSG00000275349       ENST00000622739            70289835
+1217713 ENSG00000275349       ENST00000610814            70289835
+1217714 ENSG00000275349       ENST00000628353            70282608
+1217715 ENSG00000275349       ENST00000627306            70288427
+1217716 ENSG00000275349       ENST00000627306            70286487
+1217717 ENSG00000275349       ENST00000626580            70285253
+1217718 ENSG00000275349       ENST00000631131            70282608
+1217719 ENSG00000275349       ENST00000630432            70295709
+1217720 ENSG00000275349       ENST00000622158            70286487
+1217721 ENSG00000275349       ENST00000630432            70285253
+1217722 ENSG00000275349       ENST00000629122            70286127
+1217723 ENSG00000275349       ENST00000626580            70286127
+1217724 ENSG00000275349       ENST00000626580            70296207
+1217725 ENSG00000275349       ENST00000610814            70285158
+1217726 ENSG00000275349       ENST00000610814            70290475
+1217727 ENSG00000275349       ENST00000610814            70268875
+1217728 ENSG00000275349       ENST00000622158            70286127
+1217729 ENSG00000275349       ENST00000630432            70286127
+1217730 ENSG00000275349       ENST00000631131            70268827
+1217731 ENSG00000275349       ENST00000610814            70286487
+1217732 ENSG00000275349       ENST00000622158            70282608
+1217733 ENSG00000275349       ENST00000628043            70296207
+1217734 ENSG00000275349       ENST00000628043            70295709
+1217735 ENSG00000275349       ENST00000629122            70282608
+1217736 ENSG00000275349       ENST00000626580            70288427
+1217737 ENSG00000275349       ENST00000629122            70295709
+1217738 ENSG00000275349       ENST00000626580            70289835
+1217739 ENSG00000275349       ENST00000631131            70285158
+1217740 ENSG00000275349       ENST00000622158            70268875
+1217741 ENSG00000275349       ENST00000627306            70288218
+1217742 ENSG00000275349       ENST00000629122            70289835
+1217743 ENSG00000275349       ENST00000631131            70286487
+1217744 ENSG00000275349       ENST00000622739            70285158
+1217745 ENSG00000275349       ENST00000622739            70295709
+1217746 ENSG00000275349       ENST00000622739            70282608
+1217747 ENSG00000275349       ENST00000628043            70285253
+1217748 ENSG00000275349       ENST00000630432            70296207
+1217749 ENSG00000275349       ENST00000631131            70288427
+1217750 ENSG00000275349       ENST00000610814            70286127
+1217751 ENSG00000275349       ENST00000622158            70295709
+1217752 ENSG00000275349       ENST00000629122            70288427
+1217753 ENSG00000275349       ENST00000631131            70289835
+1217754 ENSG00000275349       ENST00000622739            70288427
+1217755 ENSG00000275349       ENST00000622158            70289835
+1217756 ENSG00000275349       ENST00000629122            70285158
+1217757 ENSG00000275349       ENST00000610814            70282608
+1217758 ENSG00000275349       ENST00000629122            70268828
+1217759 ENSG00000275349       ENST00000627306            70286277
+1217760 ENSG00000275349       ENST00000610814            70288427
+1217761 ENSG00000275349       ENST00000629122            70286487
+1217762 ENSG00000275349       ENST00000622739            70268875
+1269004         LRG_676             LRG_676t1                5001
+1269005         LRG_676             LRG_676t1               18899
+1269006         LRG_676             LRG_676t1               21449
+1269007         LRG_676             LRG_676t1               22418
+1269008         LRG_676             LRG_676t1               22778
+1269009         LRG_676             LRG_676t1               24718
+1269010         LRG_676             LRG_676t1               26126
+1269011         LRG_676             LRG_676t1               32001
+1269012         LRG_676             LRG_676t1               32499
+        Exon.Chr.End..bp. Ensembl.Exon.ID     Chromosome.Name Strand
+811550           70944753 ENSE00003477349                   5      1
+811551           70938910 ENSE00001688516                   5      1
+811552           70942870 ENSE00003576392                   5      1
+811553           70925184 ENSE00002033586                   5      1
+811554           70953012 ENSE00001885073                   5      1
+811555           70944565 ENSE00002019326                   5      1
+811556           70942558 ENSE00001766361                   5      1
+811557           70942558 ENSE00002053468                   5      1
+811558           70925184 ENSE00001922009                   5      1
+811559           70942870 ENSE00003576392                   5      1
+811560           70942558 ENSE00001766361                   5      1
+811561           70951994 ENSE00003693452                   5      1
+811562           70944753 ENSE00003611930                   5      1
+811563           70942870 ENSE00003576392                   5      1
+811564           70941508 ENSE00001638255                   5      1
+811565           70946274 ENSE00002065580                   5      1
+811566           70952006 ENSE00003727855                   5      1
+811567           70942870 ENSE00003576392                   5      1
+811568           70938910 ENSE00001688516                   5      1
+811569           70944753 ENSE00003611930                   5      1
+811570           70946176 ENSE00001593733                   5      1
+811571           70946176 ENSE00001593733                   5      1
+811572           70946079 ENSE00002110817                   5      1
+811573           70942558 ENSE00002065935                   5      1
+811574           70946815 ENSE00002042046                   5      1
+811575           70941508 ENSE00001638255                   5      1
+811576           70953040 ENSE00002025434                   5      1
+811577           70946176 ENSE00001593733                   5      1
+811578           70925184 ENSE00001695536                   5      1
+811579           70942870 ENSE00003576392                   5      1
+811580           70941508 ENSE00001638255                   5      1
+811581           70942558 ENSE00001766361                   5      1
+811582           70953016 ENSE00002052357                   5      1
+811583           70946176 ENSE00001593733                   5      1
+811584           70944753 ENSE00003611930                   5      1
+811585           70942870 ENSE00003576392                   5      1
+811586           70951994 ENSE00003581587                   5      1
+811587           70941508 ENSE00001638255                   5      1
+811588           70942558 ENSE00001766361                   5      1
+811589           70925184 ENSE00002034950                   5      1
+811590           70938910 ENSE00001688516                   5      1
+811591           70942558 ENSE00002115234                   5      1
+811592           70942870 ENSE00003586477                   5      1
+811593           70952580 ENSE00002068209                   5      1
+811594           70942870 ENSE00003576392                   5      1
+811595           70953942 ENSE00002084907                   5      1
+811596           70946176 ENSE00002063740                   5      1
+811597           70946176 ENSE00001593733                   5      1
+811598           70944753 ENSE00003611930                   5      1
+811599           70941508 ENSE00001638255                   5      1
+811600           70925184 ENSE00001695536                   5      1
+811601           70941508 ENSE00001638255                   5      1
+811602           70946176 ENSE00001593733                   5      1
+811603           70946278 ENSE00002067240                   5      1
+811604           70946176 ENSE00001593733                   5      1
+811605           70942870 ENSE00003586477                   5      1
+811606           70942870 ENSE00003576392                   5      1
+811607           70938910 ENSE00001688516                   5      1
+811608           70938910 ENSE00001688516                   5      1
+811609           70941508 ENSE00001638255                   5      1
+811610           70944753 ENSE00003477349                   5      1
+811611           70946757 ENSE00003771397                   5      1
+811612           70938910 ENSE00001688516                   5      1
+811613           70942558 ENSE00001766361                   5      1
+811614           70925184 ENSE00002073998                   5      1
+811615           70938910 ENSE00001688516                   5      1
+811616           70942558 ENSE00001766361                   5      1
+811617           70925184 ENSE00001922009                   5      1
+811618           70944753 ENSE00003611930                   5      1
+811619           70952347 ENSE00002062475                   5      1
+811620           70944753 ENSE00003611930                   5      1
+811621           70952567 ENSE00002045198                   5      1
+1217696          70286639 ENSE00003743032 CHR_HSCHR5_1_CTG1_1      1
+1217697          70285277 ENSE00003744864 CHR_HSCHR5_1_CTG1_1      1
+1217698          70289945 ENSE00003724390 CHR_HSCHR5_1_CTG1_1      1
+1217699          70295894 ENSE00003775077 CHR_HSCHR5_1_CTG1_1      1
+1217700          70268955 ENSE00003769556 CHR_HSCHR5_1_CTG1_1      1
+1217701          70286327 ENSE00003749966 CHR_HSCHR5_1_CTG1_1      1
+1217702          70286639 ENSE00003743032 CHR_HSCHR5_1_CTG1_1      1
+1217703          70296783 ENSE00003762742 CHR_HSCHR5_1_CTG1_1      1
+1217704          70286327 ENSE00003749966 CHR_HSCHR5_1_CTG1_1      1
+1217705          70286639 ENSE00003743032 CHR_HSCHR5_1_CTG1_1      1
+1217706          70288522 ENSE00003748583 CHR_HSCHR5_1_CTG1_1      1
+1217707          70289945 ENSE00003724390 CHR_HSCHR5_1_CTG1_1      1
+1217708          70286327 ENSE00003749966 CHR_HSCHR5_1_CTG1_1      1
+1217709          70285277 ENSE00003744864 CHR_HSCHR5_1_CTG1_1      1
+1217710          70296780 ENSE00003762168 CHR_HSCHR5_1_CTG1_1      1
+1217711          70286639 ENSE00003743032 CHR_HSCHR5_1_CTG1_1      1
+1217712          70289945 ENSE00003724390 CHR_HSCHR5_1_CTG1_1      1
+1217713          70289945 ENSE00003724390 CHR_HSCHR5_1_CTG1_1      1
+1217714          70282679 ENSE00003739988 CHR_HSCHR5_1_CTG1_1      1
+1217715          70288528 ENSE00003772118 CHR_HSCHR5_1_CTG1_1      1
+1217716          70286639 ENSE00003743032 CHR_HSCHR5_1_CTG1_1      1
+1217717          70285277 ENSE00003769894 CHR_HSCHR5_1_CTG1_1      1
+1217718          70282679 ENSE00003739988 CHR_HSCHR5_1_CTG1_1      1
+1217719          70295762 ENSE00003773664 CHR_HSCHR5_1_CTG1_1      1
+1217720          70286639 ENSE00003743032 CHR_HSCHR5_1_CTG1_1      1
+1217721          70285277 ENSE00003769894 CHR_HSCHR5_1_CTG1_1      1
+1217722          70286327 ENSE00003749966 CHR_HSCHR5_1_CTG1_1      1
+1217723          70286327 ENSE00003749966 CHR_HSCHR5_1_CTG1_1      1
+1217724          70296562 ENSE00003764191 CHR_HSCHR5_1_CTG1_1      1
+1217725          70285277 ENSE00003744864 CHR_HSCHR5_1_CTG1_1      1
+1217726          70290525 ENSE00003770333 CHR_HSCHR5_1_CTG1_1      1
+1217727          70268955 ENSE00003738742 CHR_HSCHR5_1_CTG1_1      1
+1217728          70286327 ENSE00003749966 CHR_HSCHR5_1_CTG1_1      1
+1217729          70286327 ENSE00003749966 CHR_HSCHR5_1_CTG1_1      1
+1217730          70268955 ENSE00003767221 CHR_HSCHR5_1_CTG1_1      1
+1217731          70286639 ENSE00003743032 CHR_HSCHR5_1_CTG1_1      1
+1217732          70282679 ENSE00003739988 CHR_HSCHR5_1_CTG1_1      1
+1217733          70296340 ENSE00003770252 CHR_HSCHR5_1_CTG1_1      1
+1217734          70295762 ENSE00003773664 CHR_HSCHR5_1_CTG1_1      1
+1217735          70282679 ENSE00003739988 CHR_HSCHR5_1_CTG1_1      1
+1217736          70288522 ENSE00003748583 CHR_HSCHR5_1_CTG1_1      1
+1217737          70295762 ENSE00003773664 CHR_HSCHR5_1_CTG1_1      1
+1217738          70289945 ENSE00003724390 CHR_HSCHR5_1_CTG1_1      1
+1217739          70285277 ENSE00003744864 CHR_HSCHR5_1_CTG1_1      1
+1217740          70268955 ENSE00003738742 CHR_HSCHR5_1_CTG1_1      1
+1217741          70288334 ENSE00003773820 CHR_HSCHR5_1_CTG1_1      1
+1217742          70289945 ENSE00003724390 CHR_HSCHR5_1_CTG1_1      1
+1217743          70286639 ENSE00003743032 CHR_HSCHR5_1_CTG1_1      1
+1217744          70285277 ENSE00003744864 CHR_HSCHR5_1_CTG1_1      1
+1217745          70295774 ENSE00003713783 CHR_HSCHR5_1_CTG1_1      1
+1217746          70282679 ENSE00003739988 CHR_HSCHR5_1_CTG1_1      1
+1217747          70285277 ENSE00003769894 CHR_HSCHR5_1_CTG1_1      1
+1217748          70296340 ENSE00003770252 CHR_HSCHR5_1_CTG1_1      1
+1217749          70288522 ENSE00003748583 CHR_HSCHR5_1_CTG1_1      1
+1217750          70286327 ENSE00003749966 CHR_HSCHR5_1_CTG1_1      1
+1217751          70295774 ENSE00003713783 CHR_HSCHR5_1_CTG1_1      1
+1217752          70288522 ENSE00003748583 CHR_HSCHR5_1_CTG1_1      1
+1217753          70289945 ENSE00003724390 CHR_HSCHR5_1_CTG1_1      1
+1217754          70288522 ENSE00003748583 CHR_HSCHR5_1_CTG1_1      1
+1217755          70289945 ENSE00003724390 CHR_HSCHR5_1_CTG1_1      1
+1217756          70285277 ENSE00003744864 CHR_HSCHR5_1_CTG1_1      1
+1217757          70282679 ENSE00003739988 CHR_HSCHR5_1_CTG1_1      1
+1217758          70268955 ENSE00003763793 CHR_HSCHR5_1_CTG1_1      1
+1217759          70286327 ENSE00003771054 CHR_HSCHR5_1_CTG1_1      1
+1217760          70288522 ENSE00003748583 CHR_HSCHR5_1_CTG1_1      1
+1217761          70286639 ENSE00003743032 CHR_HSCHR5_1_CTG1_1      1
+1217762          70268955 ENSE00003738742 CHR_HSCHR5_1_CTG1_1      1
+1269004              5244     LRG_676t1e1             LRG_676      1
+1269005             18970     LRG_676t1e2             LRG_676      1
+1269006             21568     LRG_676t1e3             LRG_676      1
+1269007             22618     LRG_676t1e4             LRG_676      1
+1269008             22930     LRG_676t1e5             LRG_676      1
+1269009             24813     LRG_676t1e6             LRG_676      1
+1269010             26236     LRG_676t1e7             LRG_676      1
+1269011             32054     LRG_676t1e8             LRG_676      1
+1269012             33072     LRG_676t1e9             LRG_676      1
+        HGNC.symbol
+811550         SMN1
+811551         SMN1
+811552         SMN1
+811553         SMN1
+811554         SMN1
+811555         SMN1
+811556         SMN1
+811557         SMN1
+811558         SMN1
+811559         SMN1
+811560         SMN1
+811561         SMN1
+811562         SMN1
+811563         SMN1
+811564         SMN1
+811565         SMN1
+811566         SMN1
+811567         SMN1
+811568         SMN1
+811569         SMN1
+811570         SMN1
+811571         SMN1
+811572         SMN1
+811573         SMN1
+811574         SMN1
+811575         SMN1
+811576         SMN1
+811577         SMN1
+811578         SMN1
+811579         SMN1
+811580         SMN1
+811581         SMN1
+811582         SMN1
+811583         SMN1
+811584         SMN1
+811585         SMN1
+811586         SMN1
+811587         SMN1
+811588         SMN1
+811589         SMN1
+811590         SMN1
+811591         SMN1
+811592         SMN1
+811593         SMN1
+811594         SMN1
+811595         SMN1
+811596         SMN1
+811597         SMN1
+811598         SMN1
+811599         SMN1
+811600         SMN1
+811601         SMN1
+811602         SMN1
+811603         SMN1
+811604         SMN1
+811605         SMN1
+811606         SMN1
+811607         SMN1
+811608         SMN1
+811609         SMN1
+811610         SMN1
+811611         SMN1
+811612         SMN1
+811613         SMN1
+811614         SMN1
+811615         SMN1
+811616         SMN1
+811617         SMN1
+811618         SMN1
+811619         SMN1
+811620         SMN1
+811621         SMN1
+1217696        SMN1
+1217697        SMN1
+1217698        SMN1
+1217699        SMN1
+1217700        SMN1
+1217701        SMN1
+1217702        SMN1
+1217703        SMN1
+1217704        SMN1
+1217705        SMN1
+1217706        SMN1
+1217707        SMN1
+1217708        SMN1
+1217709        SMN1
+1217710        SMN1
+1217711        SMN1
+1217712        SMN1
+1217713        SMN1
+1217714        SMN1
+1217715        SMN1
+1217716        SMN1
+1217717        SMN1
+1217718        SMN1
+1217719        SMN1
+1217720        SMN1
+1217721        SMN1
+1217722        SMN1
+1217723        SMN1
+1217724        SMN1
+1217725        SMN1
+1217726        SMN1
+1217727        SMN1
+1217728        SMN1
+1217729        SMN1
+1217730        SMN1
+1217731        SMN1
+1217732        SMN1
+1217733        SMN1
+1217734        SMN1
+1217735        SMN1
+1217736        SMN1
+1217737        SMN1
+1217738        SMN1
+1217739        SMN1
+1217740        SMN1
+1217741        SMN1
+1217742        SMN1
+1217743        SMN1
+1217744        SMN1
+1217745        SMN1
+1217746        SMN1
+1217747        SMN1
+1217748        SMN1
+1217749        SMN1
+1217750        SMN1
+1217751        SMN1
+1217752        SMN1
+1217753        SMN1
+1217754        SMN1
+1217755        SMN1
+1217756        SMN1
+1217757        SMN1
+1217758        SMN1
+1217759        SMN1
+1217760        SMN1
+1217761        SMN1
+1217762        SMN1
+1269004        SMN1
+1269005        SMN1
+1269006        SMN1
+1269007        SMN1
+1269008        SMN1
+1269009        SMN1
+1269010        SMN1
+1269011        SMN1
+1269012        SMN1
+> 
+> ##how many transcripts does SMN1 have
+> unique (sm.dat[,"Ensembl.Transcript.ID"])
+ [1] "ENST00000507905" "ENST00000380707" "ENST00000506163" "ENST00000351205"
+ [5] "ENST00000513228" "ENST00000506239" "ENST00000625245" "ENST00000514951"
+ [9] "ENST00000510679" "ENST00000503079" "ENST00000518504" "ENST00000630432"
+[13] "ENST00000628353" "ENST00000631131" "ENST00000629122" "ENST00000628043"
+[17] "ENST00000622739" "ENST00000622158" "ENST00000610814" "ENST00000627306"
+[21] "ENST00000626580" "LRG_676t1"      
+> 
+> 
+> ################################################################################
+> 
+> 
+> ###LOAD THE LIBRARY for making the plots
+> library(Gviz)           ##this should also load the library GenomicRanges
+Loading required package: S4Vectors
+Loading required package: stats4
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:stats’:
+
+    xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, as.vector, cbind, colnames,
+    do.call, duplicated, eval, evalq, Filter, Find, get, intersect,
+    is.unsorted, lapply, Map, mapply, match, mget, order, paste, pmax,
+    pmax.int, pmin, pmin.int, Position, rank, rbind, Reduce, rep.int,
+    rownames, sapply, setdiff, sort, table, tapply, union, unique,
+    unlist, unsplit
+
+Loading required package: IRanges
+Loading required package: GenomicRanges
+Loading required package: GenomeInfoDb
+Loading required package: grid
+> library (GenomicRanges) ##but we load it just in case
+> 
+> ###Generate a Track for the genes
+> ## We may need to change the chromosome names:
+> ## sm.dat[,"Chromosome.Name"] <- paste ("chr", sm.dat[,"Chromosome.Name"], sep = "")
+> 
+> gene.track <- GeneRegionTrack (rstarts = sm.dat[,"Exon.Chr.Start..bp."], rends = sm.dat[,"Exon.Chr.End..bp."],
++                                strand = sm.dat[,"Strand"],
++                                exon = sm.dat[,"Ensembl.Exon.ID"],
++                                chromosome = sm.dat[,"Chromosome.Name"],
++                                transcript = sm.dat[,"Ensembl.Transcript.ID"],
++                                gene = sm.dat[,"Ensembl.Gene.ID"],
++                                symbol = sm.dat[,"HGNC.symbol"],
++                                showId = TRUE)
+Error in FUN(X[[i]], ...) : Invalid chromosome identifier 'LRG_676'
+Please consider setting options(ucscChromosomeNames=FALSE) to allow for arbitrary chromosome identifiers.
+Calls: GeneRegionTrack ... .local -> .chrName -> sapply -> sapply -> lapply -> FUN
+Execution halted

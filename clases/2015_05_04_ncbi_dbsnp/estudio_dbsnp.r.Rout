@@ -1,0 +1,1849 @@
+
+R version 3.2.0 (2015-04-16) -- "Full of Ingredients"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ## estudio_dbsnp.r
+> ## 2015-05-04 dmontaner@cipf.es 
+> ## Explore dbSNP data using R
+> 
+> ### Data download: dbSNP tables for chromosome 21
+> ## ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606_b141_GRCh38/BED/bed_chr_21.bed.gz
+> ## ftp://ftp.ncbi.nih.gov/snp/organisms/human_9606_b141_GRCh38/chr_rpts/chr_21.txt.gz
+> 
+> date ()
+[1] "Mon May 25 16:31:53 2015"
+> Sys.info ()[c("nodename", "user")]
+   nodename        user 
+      "lap" "dmontaner" 
+> commandArgs ()
+[1] "/usr/lib/R/bin/exec/R"                                                                                                             
+[2] "-f"                                                                                                                                
+[3] "/home/dmontaner/Documents/UV_master/mis_cursos/NOCIONES_BASICAS_2014_2015/clases_preparacion/2015_05_04_ncbi_dbsnp/estudio_dbsnp.r"
+[4] "--restore"                                                                                                                         
+[5] "--save"                                                                                                                            
+[6] "--no-readline"                                                                                                                     
+[7] "--no-save"                                                                                                                         
+[8] "--no-restore"                                                                                                                      
+> rm (list = ls ())
+> R.version.string ##"R version 3.2.0 (2015-04-16)"
+[1] "R version 3.2.0 (2015-04-16)"
+> library (Biobase); packageDescription ("Biobase", fields = "Version") #"2.28.0"
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:stats’:
+
+    xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, as.vector, cbind, colnames,
+    do.call, duplicated, eval, evalq, Filter, Find, get, intersect,
+    is.unsorted, lapply, Map, mapply, match, mget, order, paste, pmax,
+    pmax.int, pmin, pmin.int, Position, rank, rbind, Reduce, rep.int,
+    rownames, sapply, setdiff, sort, table, tapply, union, unique,
+    unlist, unsplit
+
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+[1] "2.28.0"
+> 
+> #options (width = 170)
+> 
+> 
+> ################################################################################
+> ### Reading and formatting data
+> ################################################################################
+> 
+> ## go to the working directory
+> setwd ("datos")
+> dir ()
+[1] "bed_chr_21.bed" "chr_21.txt"    
+> 
+> ## Read the BED file
+> system.time (bed <- read.table (file = "bed_chr_21.bed", header = FALSE, sep = "\t",
++                                 quote = "", as.is = TRUE, skip = 1))
+   user  system elapsed 
+  6.417   0.040   6.456 
+> class (bed)
+[1] "data.frame"
+> is.list (bed)
+[1] TRUE
+> dim (bed)
+[1] 856595      6
+> sapply (bed, class)
+         V1          V2          V3          V4          V5          V6 
+"character"   "integer"   "integer" "character"   "integer" "character" 
+> lapply (bed, class)
+$V1
+[1] "character"
+
+$V2
+[1] "integer"
+
+$V3
+[1] "integer"
+
+$V4
+[1] "character"
+
+$V5
+[1] "integer"
+
+$V6
+[1] "character"
+
+> bed[1:3,]
+     V1       V2       V3    V4 V5 V6
+1 chr21 38823352 38823353 rs530  0  -
+2 chr21 46129654 46129655 rs559  0  -
+3 chr21 44886245 44886246 rs684  0  -
+> 
+> colnames (bed) <- c ("chr", "sta", "end", "id", "V5", "strand") ## rename columns
+> bed[1:3,]
+    chr      sta      end    id V5 strand
+1 chr21 38823352 38823353 rs530  0      -
+2 chr21 46129654 46129655 rs559  0      -
+3 chr21 44886245 44886246 rs684  0      -
+> 
+> ## Read the tabular file
+> ## Headers are:
+> ## rs#	map	snp	chr	ctg	total	chr	ctg	ctg	ctg	ctg	chr	local	avg	s.e.	max	vali-	geno-	link	orig	upd
+> ## 	wgt	type	hits	hits	hits		acc	ver	ID	pos	pos	loci	het	het	prob	dated	types	outs	build	build
+> 
+> datos <- read.table (file = "chr_21.txt", header = FALSE,
++                      sep = "\t", quote = "", as.is = TRUE, skip = 7)
+> dim (datos)
+[1] 876001     26
+> sapply (datos, class)
+         V1          V2          V3          V4          V5          V6 
+  "integer"   "integer"   "integer"   "integer"   "integer"   "integer" 
+         V7          V8          V9         V10         V11         V12 
+  "integer" "character"   "integer" "character"   "integer"   "integer" 
+        V13         V14         V15         V16         V17         V18 
+"character"   "numeric"   "numeric"   "integer"   "integer"   "integer" 
+        V19         V20         V21         V22         V23         V24 
+  "integer"   "integer"   "integer" "character"   "integer" "character" 
+        V25         V26 
+"character" "character" 
+> table (sapply (datos, class))
+
+character   integer   numeric 
+        7        17         2 
+> datos[1:3,]
+   V1 V2 V3 V4 V5 V6 V7        V8 V9          V10      V11      V12    V13
+1 530  2  0  1  1  1 21 NT_011512 12 NT_011512.12 25857545 38823353   ETS2
+2 559  2  0  1  1  1 21 NT_011512 12 NT_011512.12 33163847 46129655 COL6A2
+3 684  2  0  1  1  1 21 NT_011512 12 NT_011512.12 31920438 44886246  ITGB2
+       V14      V15 V16 V17 V18 V19 V20 V21    V22 V23 V24 V25             V26
+1 0.454364 0.143998  NA  59   1   1  36 138 GRCh38   0         T:2178:0.348944
+2 0.322416 0.239282  NA  59   1   1  36 138 GRCh38   0          C:2178:0.20202
+3 0.274090 0.248837  NA  59   1   1  36 138 GRCh38   0         T:2178:0.163912
+> 
+> ## Rename some columns
+> colnames (datos)[1]  <- "id"
+> colnames (datos)[3]  <- "type"
+> colnames (datos)[7]  <- "chr"
+> colnames (datos)[11] <- "sta"
+> colnames (datos)[12] <- "end"
+> colnames (datos)[13] <- "gen"
+> colnames (datos)[26] <- "variant"
+> 
+> datos[1:5,]
+   id V2 type V4 V5 V6 chr        V8 V9          V10      sta      end
+1 530  2    0  1  1  1  21 NT_011512 12 NT_011512.12 25857545 38823353
+2 559  2    0  1  1  1  21 NT_011512 12 NT_011512.12 33163847 46129655
+3 684  2    0  1  1  1  21 NT_011512 12 NT_011512.12 31920438 44886246
+4 711  2    0  1  1  1  21 NT_011512 12 NT_011512.12 25857327 38823135
+5 716  2    0  1  1  1  21 NT_011512 12 NT_011512.12 20611259 33577067
+         gen      V14      V15 V16 V17 V18 V19 V20 V21    V22 V23 V24 V25
+1       ETS2 0.454364 0.143998  NA  59   1   1  36 138 GRCh38   0        
+2     COL6A2 0.322416 0.239282  NA  59   1   1  36 138 GRCh38   0        
+3      ITGB2 0.274090 0.248837  NA  59   1   1  36 138 GRCh38   0        
+4       ETS2 0.464052 0.129159  NA  59   1   1  36 138 GRCh38   0        
+5 DONSON,SON 0.000000 0.000000  NA  17   1   1  36 138 GRCh38   0        
+          variant
+1 T:2178:0.348944
+2  C:2178:0.20202
+3 T:2178:0.163912
+4 A:2178:0.365932
+5                
+> 
+> ## spit the variant column
+> ## We separate in 3 columns containing the genotype, the count and the maf
+> spl <- strsplit (datos[,"variant"], split = ":")
+> head (spl)  ## spl is a __list__ with a vector per row in datos
+[[1]]
+[1] "T"        "2178"     "0.348944"
+
+[[2]]
+[1] "C"       "2178"    "0.20202"
+
+[[3]]
+[1] "T"        "2178"     "0.163912"
+
+[[4]]
+[1] "A"        "2178"     "0.365932"
+
+[[5]]
+[1] " "
+
+[[6]]
+[1] "G"        "2178"     "0.238292"
+
+> 
+> lon <- sapply (spl, length)  ## we compute the length of spl
+> class (lon)
+[1] "integer"
+> lon[1:10]
+ [1] 3 3 3 3 1 3 3 1 3 3
+> table (lon, exclude = NULL)
+lon
+     1      3   <NA> 
+345646 530355      0 
+> ## the length of the spl elements is 3 when the {genotype, count, maf} information is available
+> ## and is 1 when the column "variant" was empty.
+> 
+> ## now we EXTRACT the first, second and third element of the vectors in the list spl
+> datos[,"genotipo"] <- sapply (spl, "[", 1)
+> datos[,"count"]    <- sapply (spl, "[", 2)
+> datos[,"maf"]      <- sapply (spl, "[", 3)
+> datos[1:10,]
+     id V2 type V4 V5 V6 chr        V8 V9          V10      sta      end
+1   530  2    0  1  1  1  21 NT_011512 12 NT_011512.12 25857545 38823353
+2   559  2    0  1  1  1  21 NT_011512 12 NT_011512.12 33163847 46129655
+3   684  2    0  1  1  1  21 NT_011512 12 NT_011512.12 31920438 44886246
+4   711  2    0  1  1  1  21 NT_011512 12 NT_011512.12 25857327 38823135
+5   716  2    0  1  1  1  21 NT_011512 12 NT_011512.12 20611259 33577067
+6   773  2    0  1  1  1  21 NT_011512 12 NT_011512.12 13732569 26698377
+7   927  2    0  1  1  1  21 NT_011512 12 NT_011512.12  5303897 18269705
+8  1005  2    0  1  1  1  21 NT_011512 12 NT_011512.12  5303898 18269706
+9  1033  2    0  1  1  1  21 NT_011512 12 NT_011512.12  2557157 15522965
+10 1141  2    0  1  1  1  21 NT_011512 12 NT_011512.12 31835444 44801252
+                   gen      V14      V15 V16 V17 V18 V19 V20 V21    V22 V23 V24
+1                 ETS2 0.454364 0.143998  NA  59   1   1  36 138 GRCh38   0    
+2               COL6A2 0.322416 0.239282  NA  59   1   1  36 138 GRCh38   0    
+3                ITGB2 0.274090 0.248837  NA  59   1   1  36 138 GRCh38   0    
+4                 ETS2 0.464052 0.129159  NA  59   1   1  36 138 GRCh38   0    
+5           DONSON,SON 0.000000 0.000000  NA  17   1   1  36 138 GRCh38   0    
+6                      0.363018 0.222995  NA  63   1   1  36 138 GRCh38   0    
+7             TMPRSS15 0.264736 0.249565  NA  43   1   1  36 138 GRCh38   0    
+8             TMPRSS15 0.000000 0.000000  NA   0   0   1  36  36 GRCh38   0    
+9                      0.159252 0.232948  NA  51   1   1  36 138 GRCh38   0    
+10 LOC101928689,UBE2G2 0.200382 0.245027  NA  55   1   1  36 138 GRCh38   0    
+   V25         variant genotipo count      maf
+1      T:2178:0.348944        T  2178 0.348944
+2       C:2178:0.20202        C  2178  0.20202
+3      T:2178:0.163912        T  2178 0.163912
+4      A:2178:0.365932        A  2178 0.365932
+5                                <NA>     <NA>
+6      G:2178:0.238292        G  2178 0.238292
+7      T:2178:0.157025        T  2178 0.157025
+8                                <NA>     <NA>
+9      T:2178:0.087236        T  2178 0.087236
+10     C:2178:0.112948        C  2178 0.112948
+> 
+> datos[5, "genotipo"]              ## when "variant" information was empty our new "genotipo" is a white space: " "
+[1] " "
+> datos[lon == 1, "genotipo"] <- NA ## we replace those with proper missing values
+> datos[1:10,]
+     id V2 type V4 V5 V6 chr        V8 V9          V10      sta      end
+1   530  2    0  1  1  1  21 NT_011512 12 NT_011512.12 25857545 38823353
+2   559  2    0  1  1  1  21 NT_011512 12 NT_011512.12 33163847 46129655
+3   684  2    0  1  1  1  21 NT_011512 12 NT_011512.12 31920438 44886246
+4   711  2    0  1  1  1  21 NT_011512 12 NT_011512.12 25857327 38823135
+5   716  2    0  1  1  1  21 NT_011512 12 NT_011512.12 20611259 33577067
+6   773  2    0  1  1  1  21 NT_011512 12 NT_011512.12 13732569 26698377
+7   927  2    0  1  1  1  21 NT_011512 12 NT_011512.12  5303897 18269705
+8  1005  2    0  1  1  1  21 NT_011512 12 NT_011512.12  5303898 18269706
+9  1033  2    0  1  1  1  21 NT_011512 12 NT_011512.12  2557157 15522965
+10 1141  2    0  1  1  1  21 NT_011512 12 NT_011512.12 31835444 44801252
+                   gen      V14      V15 V16 V17 V18 V19 V20 V21    V22 V23 V24
+1                 ETS2 0.454364 0.143998  NA  59   1   1  36 138 GRCh38   0    
+2               COL6A2 0.322416 0.239282  NA  59   1   1  36 138 GRCh38   0    
+3                ITGB2 0.274090 0.248837  NA  59   1   1  36 138 GRCh38   0    
+4                 ETS2 0.464052 0.129159  NA  59   1   1  36 138 GRCh38   0    
+5           DONSON,SON 0.000000 0.000000  NA  17   1   1  36 138 GRCh38   0    
+6                      0.363018 0.222995  NA  63   1   1  36 138 GRCh38   0    
+7             TMPRSS15 0.264736 0.249565  NA  43   1   1  36 138 GRCh38   0    
+8             TMPRSS15 0.000000 0.000000  NA   0   0   1  36  36 GRCh38   0    
+9                      0.159252 0.232948  NA  51   1   1  36 138 GRCh38   0    
+10 LOC101928689,UBE2G2 0.200382 0.245027  NA  55   1   1  36 138 GRCh38   0    
+   V25         variant genotipo count      maf
+1      T:2178:0.348944        T  2178 0.348944
+2       C:2178:0.20202        C  2178  0.20202
+3      T:2178:0.163912        T  2178 0.163912
+4      A:2178:0.365932        A  2178 0.365932
+5                          <NA>  <NA>     <NA>
+6      G:2178:0.238292        G  2178 0.238292
+7      T:2178:0.157025        T  2178 0.157025
+8                          <NA>  <NA>     <NA>
+9      T:2178:0.087236        T  2178 0.087236
+10     C:2178:0.112948        C  2178 0.112948
+> 
+> 
+> 
+> ################################################################################
+> ### Exploring data
+> ################################################################################
+> 
+> ## Display of all (unique) variants; many of them are not SNPs
+> unique (datos[,"genotipo"])
+  [1] "T"                                  "C"                                 
+  [3] "A"                                  NA                                  
+  [5] "G"                                  "-"                                 
+  [7] "AAA"                                "TG"                                
+  [9] "ATGA"                               "CA"                                
+ [11] "CT"                                 "AGCT"                              
+ [13] "GAGCT"                              "GT"                                
+ [15] "AA"                                 "GG"                                
+ [17] "GTT"                                "ATTTAAGAAA"                        
+ [19] "CC"                                 "GA"                                
+ [21] "TCTG"                               "TGA"                               
+ [23] "AC"                                 "AGA"                               
+ [25] "CAGT"                               "TTTT"                              
+ [27] "TATGC"                              "AGTA"                              
+ [29] "AG"                                 "TT"                                
+ [31] "AATT"                               "TC"                                
+ [33] "CCA"                                "CTT"                               
+ [35] "AAC"                                "AT"                                
+ [37] "ATTT"                               "TTAAACTA"                          
+ [39] "CTCT"                               "TAA"                               
+ [41] "AGAA"                               "ACTCTAAG"                          
+ [43] "ATG"                                "TTTG"                              
+ [45] "AAAC"                               "AGAG"                              
+ [47] "AGG"                                "CTGCTGT"                           
+ [49] "TA"                                 "AGTC"                              
+ [51] "TTAA"                               "AACATAATCACTCTA"                   
+ [53] "TCGTATCAC"                          "ATTTAGAACTTTTGTTCTAA"              
+ [55] "TGGCGCCCCTGGGCTGGGCA"               "AGAT"                              
+ [57] "TTTATTT"                            "GC"                                
+ [59] "CG"                                 "TCTTCC"                            
+ [61] "TAAG"                               "GAGT"                              
+ [63] "TGT"                                "TATA"                              
+ [65] "TTC"                                "CAAT"                              
+ [67] "AAAT"                               "CCC"                               
+ [69] "TCA"                                "GAA"                               
+ [71] "GACG"                               "AGT"                               
+ [73] "TTAC"                               "TGTCTG"                            
+ [75] "TATG"                               "ACAGG"                             
+ [77] "AAAA"                               "ATAG"                              
+ [79] "AGAC"                               "TTCTG"                             
+ [81] "TATAAT"                             "TAGT"                              
+ [83] "CTCTT"                              "CAA"                               
+ [85] "TCTC"                               "GAGAGA"                            
+ [87] "TTA"                                "CTGA"                              
+ [89] "TTG"                                "ATT"                               
+ [91] "CCAT"                               "AAAAG"                             
+ [93] "ATC"                                "GTTA"                              
+ [95] "GAG"                                "AAT"                               
+ [97] "GGGA"                               "CCT"                               
+ [99] "ACAT"                               "TGTG"                              
+[101] "GAT"                                "AAG"                               
+[103] "CACT"                               "TGTA"                              
+[105] "TTTA"                               "CAAA"                              
+[107] "ATCAA"                              "GACCCACTGTGCCCCGA"                 
+[109] "CCCGCCACTGCCCT"                     "AGTGTGTTGTC"                       
+[111] "GCCACCACCCCCG"                      "ATAAAATGATTGT"                     
+[113] "CCTAGG"                             "GAGTGGGGT"                         
+[115] "CCAGG"                              "TGTGCAT"                           
+[117] "AGCCTA"                             "CCTATTGA"                          
+[119] "TGTTCTC"                            "AGGGTATC"                          
+[121] "CACTAC"                             "TCTTCTTCTTC"                       
+[123] "GTTGCTAT"                           "CCAGA"                             
+[125] "TCC"                                "GCC"                               
+[127] "TTT"                                "TTTTTTG"                           
+[129] "GGG"                                "ACA"                               
+[131] "ACTC"                               "TAAT"                              
+[133] "CTG"                                "GGGC"                              
+[135] "TGCT"                               "TGTTTT"                            
+[137] "CTAT"                               "ATTAA"                             
+[139] "GTG"                                "ACT"                               
+[141] "AGGG"                               "AGC"                               
+[143] "TGAC"                               "TGAA"                              
+[145] "CACACTCA"                           "AGTGC"                             
+[147] "GAGTCAAG"                           "AACA"                              
+[149] "ACTTGTTT"                           "GGGGCC"                            
+[151] "ATA"                                "AGAATGGTGTGAAC"                    
+[153] "CCCT"                               "ACAG"                              
+[155] "ATTA"                               "GATAGATAGAT"                       
+[157] "GGGGTC"                             "TTGT"                              
+[159] "CTTA"                               "AAGA"                              
+[161] "CAAGGG"                             "ATCACTG"                           
+[163] "CAT"                                "GTAT"                              
+[165] "ATAC"                               "TTTTT"                             
+[167] "GGGTCTGTGACAGCGGC"                  "GATA"                              
+[169] "TTGA"                               "ATACATAA"                          
+[171] "CTTAGGAAACAAAATAATA"                "CACCAT"                            
+[173] "TCATGCTTCTTCC"                      "CTC"                               
+[175] "ATTAC"                              "TATT"                              
+[177] "GCCCGCT"                            "GGTCC"                             
+[179] "TGAG"                               "GCCCA"                             
+[181] "TGTCAAA"                            "CTTCTGCCT"                         
+[183] "GAGGCC"                             "ATAA"                              
+[185] "ATGCAA"                             "CTGCTGTGTGCCTGT"                   
+[187] "CTAAAAC"                            "TCAAAATCT"                         
+[189] "TGAGG"                              "ACCTC"                             
+[191] "CTAA"                               "TAGA"                              
+[193] "CTGGACCACCCCGTCTC"                  "TATCTCTCCATA"                      
+[195] "CCATATTCTAT"                        "TAT"                               
+[197] "CAAC"                               "AAGG"                              
+[199] "TTTTC"                              "TGTCATCATAACCTCC"                  
+[201] "ATATA"                              "AGTAGAGGATAGAGT"                   
+[203] "TTAT"                               "ACGT"                              
+[205] "TCTT"                               "GCCTAT"                            
+[207] "ATAGAC"                             "CAGGAG"                            
+[209] "CATGGTGG"                           "ACTG"                              
+[211] "ACCATCCTAGCTA"                      "TCAA"                              
+[213] "CAGA"                               "TAC"                               
+[215] "CCTGGGA"                            "GTAAT"                             
+[217] "AATA"                               "AAAG"                              
+[219] "AAAAC"                              "TAAAATAAA"                         
+[221] "ATGTGC"                             "ATATAT"                            
+[223] "TTTC"                               "GGCGGA"                            
+[225] "CGGT"                               "TAAATAGAAA"                        
+[227] "TGGAGTGCAG"                         "GCCTGG"                            
+[229] "TCCTGAGCTCCAGAACAT"                 "GCGGGGC"                           
+[231] "GGGGGG"                             "TCTTG"                             
+[233] "CGAG"                               "AGGA"                              
+[235] "TTATAGA"                            "TACC"                              
+[237] "ATAAGC"                             "TCTCTT"                            
+[239] "AGTT"                               "ACC"                               
+[241] "CACGGGGGTACCCTCAGTACC"              "GTAGTATGCCAC"                      
+[243] "TGAGGTGAGG"                         "TACA"                              
+[245] "GTTTT"                              "AAACAAAC"                          
+[247] "ACTT"                               "GTTG"                              
+[249] "ATTTGTAAT"                          "GAGTCAT"                           
+[251] "ACATAGC"                            "ATTTCAGA"                          
+[253] "ACCACA"                             "TCCC"                              
+[255] "CAATG"                              "GAACGTA"                           
+[257] "GGAGTCCA"                           "TAAAGAA"                           
+[259] "CGTCT"                              "TTTGTGA"                           
+[261] "GTCCCGAAT"                          "CCTCTTTC"                          
+[263] "TAGCA"                              "AATC"                              
+[265] "CAGAATTGCT"                         "TAAAG"                             
+[267] "GGTCTCT"                            "CTGCA"                             
+[269] "AGAACTATG"                          "AGTCTCTGTT"                        
+[271] "CTTAA"                              "GGAGTGAA"                          
+[273] "AGACACACAC"                         "TCCCAGAAA"                         
+[275] "CATT"                               "TTTGT"                             
+[277] "ATATACAT"                           "AGGGTGCT"                          
+[279] "GTGCCCA"                            "ATCA"                              
+[281] "ACAGGATATT"                         "GAGA"                              
+[283] "AAGTC"                              "CAAG"                              
+[285] "TCAT"                               "CCTGA"                             
+[287] "CTGGATCTG"                          "GAAAA"                             
+[289] "TTGATAAG"                           "TATC"                              
+[291] "CAGC"                               "TGTTTGTG"                          
+[293] "ATGGCGCACC"                         "AGGAGGCCTGA"                       
+[295] "AAGGTAG"                            "GCTAACGAATAAA"                     
+[297] "TGGCCC"                             "GAAC"                              
+[299] "TTGTC"                              "CAACAA"                            
+[301] "ACTGT"                              "CCCCAACAGCC"                       
+[303] "TCCT"                               "GCTGGGCCTGT"                       
+[305] "AGAAGTGT"                           "AGGGAGGG"                          
+[307] "GTTCCTGAGAATCAC"                    "TGTCTTAG"                          
+[309] "TTAAA"                              "GTCTTCATTT"                        
+[311] "CAGAGAGAGA"                         "GCCCT"                             
+[313] "CATTGTCT"                           "GGAGTT"                            
+[315] "GGTCCC"                             "CCATCAT"                           
+[317] "AACTGGT"                            "ATATTTC"                           
+[319] "AACTCG"                             "CAG"                               
+[321] "CCTC"                               "ACTAAAGG"                          
+[323] "CTTT"                               "TAGAG"                             
+[325] "TTTTA"                              "TTTTGC"                            
+[327] "AAAGTC"                             "CACATCCAAAAG"                      
+[329] "GTCTCTGCGCCGCCGGGGACGTGT"           "CTCTC"                             
+[331] "CCCTGTCTC"                          "AAATTGTTTGATTG"                    
+[333] "GGCGGGGGGCGGGGGGC"                  "AATTGG"                            
+[335] "AATG"                               "CTGATTTTTTT"                       
+[337] "CCGGA"                              "TGGGAGGAAAC"                       
+[339] "TGGACTTC"                           "AACACTTCTGGTCT"                    
+[341] "AAGAT"                              "TTAAGA"                            
+[343] "AATGACGTAGA"                        "TTTGCA"                            
+[345] "TGGG"                               "ACAC"                              
+[347] "ATAGAAA"                            "GTCAGAAG"                          
+[349] "ATAAG"                              "TTTGA"                             
+[351] "TAAC"                               "CTTTC"                             
+[353] "TTGTGAAATA"                         "AGACAGATTG"                        
+[355] "CAAAT"                              "CACACGCACG"                        
+[357] "GTTT"                               "CCG"                               
+[359] "CAGCCCC"                            "ATCAGG"                            
+[361] "ATCTG"                              "TATTATG"                           
+[363] "GGAGCCG"                            "ACTTC"                             
+[365] "GCA"                                "AAAGT"                             
+[367] "TTCATGGGT"                          "AGTG"                              
+[369] "TCT"                                "GGAGCTG"                           
+[371] "TTTTTG"                             "CTCA"                              
+[373] "CAGCCCCCACCAAAATCTTCCC"             "TTCA"                              
+[375] "AATAATCAAT"                         "AAATAAGTT"                         
+[377] "GCAAGATTATATAAA"                    "GGAG"                              
+[379] "ATTAT"                              "AGAGACTTTGAGAAATACTTTAAAAAT"       
+[381] "AATAAATA"                           "ACTA"                              
+[383] "TAG"                                "CTGTAGGT"                          
+[385] "TATTT"                              "GGAGCTGGGGCTGAGGCCA"               
+[387] "TCCCTCACCACCCTCCGTCTCTTCG"          "TGGGGG"                            
+[389] "GGCT"                               "CTGTT"                             
+[391] "TGTT"                               "GACTAACATTT"                       
+[393] "TCAC"                               "GAC"                               
+[395] "CAATAG"                             "CCTAAACT"                          
+[397] "TTCT"                               "TAAATT"                            
+[399] "AATAA"                              "TAAAGAC"                           
+[401] "CAGAGTTA"                           "ATATATATATATA"                     
+[403] "ACACACAGT"                          "AAGCA"                             
+[405] "CAGGA"                              "AAAAAC"                            
+[407] "ATAACGTATG"                         "CCTGT"                             
+[409] "ACATTTTAATCTCAG"                    "AAATC"                             
+[411] "TATATTTAATAACAGGGAAC"               "AAATAAGC"                          
+[413] "AAAAAATTCATGTC"                     "CACTAAG"                           
+[415] "TATTTTTCTT"                         "GGAGGGCGGCCGGGGAG"                 
+[417] "GGGGGGC"                            "GAATAAGCC"                         
+[419] "TCTTGAATTATAGC"                     "GCAA"                              
+[421] "TTGTT"                              "AAGT"                              
+[423] "CTGT"                               "ACGGGG"                            
+[425] "ATTC"                               "TAATCT"                            
+[427] "TCTAC"                              "ATGTTTGATATGTAAAGT"                
+[429] "TAAA"                               "GCTGTCTTCA"                        
+[431] "CTTGAAG"                            "TAGCTCC"                           
+[433] "TGGAG"                              "TATCCCCG"                          
+[435] "ACCCA"                              "CATCTAT"                           
+[437] "ATATATAATATATATAATACATAAATATATATGT" "TGTATATA"                          
+[439] "ATCAT"                              "TTGCCTTTAATGCAA"                   
+[441] "GAGTGT"                             "GAAACGCCTC"                        
+[443] "TTGTATG"                            "AAGGCCTGTAG"                       
+[445] "GAGCCC"                             "GTCCCTG"                           
+[447] "GAGC"                               "GTGA"                              
+[449] "TCTA"                               "TGAGA"                             
+[451] "TGAAGA"                             "TATGTA"                            
+[453] "TTGC"                               "TATTAGAA"                          
+[455] "TAATAGCAATCGATTTGGT"                "CCAGGT"                            
+[457] "TTATA"                              "TATAA"                             
+[459] "TTACTTCCTCCAC"                      "TAATT"                             
+[461] "GGTAGAGGGAGCACTCCG"                 "CTTAG"                             
+[463] "TTTTTGTTTGTTTG"                     "TGAT"                              
+[465] "TTATTTCAC"                          "ATGGAAC"                           
+[467] "CACCCT"                             "AAATAAATT"                         
+[469] "AGATTTC"                            "ATGCTT"                            
+[471] "TAGTTGTAAG"                         "TTTAAAAAATGT"                      
+[473] "TTTAT"                              "AATGTAGCAATGT"                     
+[475] "GTGTGTGCGTGC"                       "TGCA"                              
+[477] "AACT"                               "GAAA"                              
+[479] "AAACC"                              "AGGGATG"                           
+[481] "CTA"                                "AAGTGAA"                           
+[483] "GTC"                                "GGGTCC"                            
+[485] "TAACTTCTTTCCTTCTACATAGAGAG"         "TTGAT"                             
+[487] "ACAGTTA"                            "AAAATAATAA"                        
+[489] "AGCAG"                              "TACAATGAAAAATTCAG"                 
+[491] "CCTCC"                              "TTATT"                             
+[493] "TCAG"                               "AGGT"                              
+[495] "CGACA"                              "TAAGT"                             
+[497] "ATGT"                               "TTTTG"                             
+[499] "GTTTTC"                             "TTAG"                              
+[501] "CTGC"                               "TTGTTT"                            
+[503] "CCGT"                               "ATGTAG"                            
+[505] "TTCTTTCTCTTTCTTT"                   "TGGTACA"                           
+[507] "TAGG"                               "AGGAG"                             
+[509] "TAATTATAATA"                        "TTCAG"                             
+[511] "TTCAATGTA"                          "GTGG"                              
+[513] "AACAAT"                             "AATATT"                            
+[515] "AATAAAT"                            "ACAA"                              
+[517] "TACTC"                              "GAGTA"                             
+[519] "GAGGTCC"                            "CTGGCTG"                           
+[521] "TGTAATGAAAAG"                       "GAGGTCGT"                          
+[523] "TGGTGT"                             "TGGGCACACTGA"                      
+[525] "AGAGACAG"                           "GGCCCCCCA"                         
+[527] "CTTTTGAAC"                          "CAGGGGCCAGCGATCCA"                 
+[529] "TATTAC"                             "CCACGCTGGT"                        
+[531] "TTTTATTTTTTATTT"                    "ACCAACTAG"                         
+[533] "TTCC"                               "GTGTGTGTGCGC"                      
+[535] "AGAGAGCA"                           "GAACC"                             
+[537] "CAGCTCA"                            "ACTTA"                             
+[539] "AAGGCTAAAACCCTCC"                   "GAGCTATCT"                         
+[541] "AATCATAGTTTA"                       "GGGGTG"                            
+[543] "AATTCAC"                            "ATTG"                              
+[545] "CGCCT"                              "TATGAGAC"                          
+[547] "AAGAAAG"                            "ACACACAT"                          
+[549] "ACTTGCCC"                           "AAGCTGAACACTATA"                   
+[551] "TTATTTATTTTTA"                      "ATATTCTTAGCTTTTCTCA"               
+[553] "CCATCCTCCAGGCT"                     "CTCG"                              
+[555] "CCTT"                               "GAGTC"                             
+[557] "ACACACTCCC"                         "GTCTG"                             
+[559] "AAGAAGG"                            "CCCTT"                             
+[561] "CTCCCAAGATGGTGGCGGGCCA"             "TGGGG"                             
+[563] "TAGC"                               "ATTCTT"                            
+[565] "TTTCAT"                             "TTTCTTTTC"                         
+[567] "TGC"                                "CATCCATCCATT"                      
+[569] "GTAAGTAGACA"                        "AGAGAC"                            
+[571] "TGGGGT"                             "TACATATATATATATATATATATG"          
+[573] "GGGAT"                              "GGCCCCTC"                          
+[575] "AAAGAAAGAAAGAAAGAAG"                "CCCCTC"                            
+[577] "CATG"                               "AACATG"                            
+[579] "AAACTGTTTTTCAAAG"                   "TATATA"                            
+[581] "AAATCAATCA"                         "TTTTTT"                            
+[583] "TTTTTCT"                            "GACA"                              
+[585] "AAAGAG"                             "ACCTCACCCC"                        
+[587] "AAGAAG"                             "CCGGTTAA"                          
+[589] "GGGGG"                              "ATCTGCTGT"                         
+[591] "TGGAA"                              "AATAAGCCA"                         
+[593] "CAAAC"                              "TATGTT"                            
+[595] "TTGG"                               "GCAGG"                             
+[597] "AAGCATT"                            "ATATAAAA"                          
+[599] "TTGAG"                              "CTTAGA"                            
+[601] "ATATACACATATAT"                     "GGCCGGGGAAGGAGGGC"                 
+[603] "CTGTG"                              "ACAAT"                             
+[605] "GGGGT"                              "TCAAAATC"                          
+[607] "ATATATATAT"                         "TGCC"                              
+[609] "GGT"                                "TTTTATA"                           
+[611] "TCGT"                               "AAAAAA"                            
+[613] "GTTC"                               "GAGGCT"                            
+[615] "TATAT"                              "TCTCTCTTTCTCTT"                    
+[617] "TATATG"                             "TGTCTATG"                          
+[619] "CACA"                               "CACACACACACACACG"                  
+[621] "CTGATGTG"                           "TTTCC"                             
+[623] "TGTC"                               "TTATAC"                            
+[625] "CTTTT"                              "TTTCTG"                            
+[627] "GGGATTCTTTTGCCTC"                   "CGG"                               
+[629] "TTTCT"                              "TCTCTTTCTCTT"                      
+[631] "TCCAA"                              "CAAAACA"                           
+[633] "CACCCCT"                            "TTCTGGGATC"                        
+[635] "CGCT"                               "TGGT"                              
+[637] "TTTTTTTG"                           "ATCTT"                             
+[639] "ATAGATAC"                           "CCCCTTAC"                          
+[641] "CAGCCC"                             "GCAATTT"                           
+[643] "ATATATATACAC"                       "GCTAC"                             
+[645] "CCAG"                               "ACCA"                              
+[647] "AAAAAAAAG"                          "TATTTT"                            
+[649] "TATATATATATT"                       "CTCACTAT"                          
+[651] "ACATAT"                             "GATT"                              
+[653] "TGG"                                "GAAAGGAAG"                         
+[655] "AGTGTCCCCTGGGGTG"                   "ATGG"                              
+[657] "CTTCCTTT"                           "TGTGA"                             
+[659] "ATGTCTG"                            "CAGAAGAA"                          
+[661] "ATCT"                               "CTCTGGG"                           
+[663] "TTATTA"                             "GAAAGAAA"                          
+[665] "GAATTCC"                            "ATAAAA"                            
+[667] "ACCTTTTA"                           "GCTA"                              
+[669] "TTTTTC"                             "GGTA"                              
+[671] "TGTGTGTGTG"                         "CTCC"                              
+[673] "CGGC"                               "TATATAA"                           
+[675] "ATCAAG"                             "ATATT"                             
+[677] "CGGTAGT"                            "GCATGGGGCTCCCT"                    
+[679] "AGGC"                               "TTTTAA"                            
+[681] "ATATATA"                            "CTTTTTA"                           
+[683] "GGCTCCAAT"                          "TCTCT"                             
+[685] "CGA"                                "TCTGG"                             
+[687] "ACTCGC"                             "GAGGAT"                            
+[689] "AAAAAAAAAAC"                        "CTTC"                              
+[691] "GGAT"                               "GAGGCA"                            
+[693] "AAAGAACT"                           "CCTA"                              
+[695] "GCGT"                               "TGCCT"                             
+[697] "CTGCTCA"                            "TACG"                              
+[699] "ATTTA"                              "ATATATATATATATATAA"                
+[701] "CACG"                               "AAAAT"                             
+[703] "AGCC"                               "ATATAC"                            
+[705] "AAATATT"                            "AAAGAA"                            
+[707] "TGGGCGGTGTGC"                       "CAAAG"                             
+[709] "ACCCCT"                             "AGAGA"                             
+[711] "ATATAGATATATAAC"                    "TGTGGC"                            
+[713] "ATATAATTAATTAGTTG"                  "TGTTC"                             
+[715] "CATGC"                              "AGTTTTAT"                          
+[717] "CTTTTT"                             "CTGTCTGTGGTCTTTTCC"                
+[719] "GCTATC"                             "CTGGAG"                            
+[721] "CACCTGTAGTCC"                       "CCTG"                              
+[723] "CCCCA"                              "TTTAGG"                            
+[725] "GTCTTTTGAGATAA"                     "TATATATT"                          
+[727] "CTGTGGGG"                           "AAGTTTGTTTCTTAA"                   
+[729] "ATCAATATT"                          "CCCA"                              
+[731] "TGTGTGTGTA"                         "TTCTAA"                            
+[733] "ATGACGT"                            "TCTTTC"                            
+[735] "TGTTGTTT"                           "AAACAA"                            
+[737] "AAGAAAGAAAG"                        "ATGTATATATAA"                      
+[739] "AAGC"                               "GAATATATATAC"                      
+[741] "ATAT"                               "ATATATATATATATAA"                  
+[743] "GGGAGTCA"                           "GTATATAT"                          
+[745] "AATAAG"                             "GCTCTG"                            
+[747] "TCTTTCTC"                           "CCTGGAAGGTG"                       
+[749] "GGC"                                "AAGAAAGAAAGAAAG"                   
+[751] "CTCTCTCTGTGT"                       "GTTGTG"                            
+[753] "TGTTG"                              "TAATTAAG"                          
+[755] "GGGAC"                              "ACCT"                              
+[757] "CTGCCA"                             "TCCCTCCC"                          
+[759] "GCAT"                               "CACAAGTACCAGAA"                    
+[761] "GTGGGGT"                            "GTGC"                              
+[763] "CTTTGC"                            
+> 
+> ## But the most common variants are SNPs.
+> ## We can find this at the end of a sorted table
+> sort (table (datos[,"genotipo"]))
+
+                            AAAAAA                        AAAAAAAAAAC 
+                                 1                                  1 
+                         AAAAAAAAG                     AAAAAATTCATGTC 
+                                 1                                  1 
+                            AAAAAC                         AAAATAATAA 
+                                 1                                  1 
+                            AAACAA                           AAACAAAC 
+                                 1                                  1 
+                             AAACC                   AAACTGTTTTTCAAAG 
+                                 1                                  1 
+                            AAAGAA                AAAGAAAGAAAGAAAGAAG 
+                                 1                                  1 
+                          AAAGAACT                             AAAGAG 
+                                 1                                  1 
+                             AAAGT                             AAAGTC 
+                                 1                                  1 
+                         AAATAAATT                           AAATAAGC 
+                                 1                                  1 
+                         AAATAAGTT                            AAATATT 
+                                 1                                  1 
+                             AAATC                         AAATCAATCA 
+                                 1                                  1 
+                    AAATTGTTTGATTG                             AACAAT 
+                                 1                                  1 
+                    AACACTTCTGGTCT                    AACATAATCACTCTA 
+                                 1                                  1 
+                            AACATG                             AACTCG 
+                                 1                                  1 
+                           AACTGGT                            AAGAAAG 
+                                 1                                  1 
+                       AAGAAAGAAAG                    AAGAAAGAAAGAAAG 
+                                 1                                  1 
+                            AAGAAG                            AAGAAGG 
+                                 1                                  1 
+                              AAGC                              AAGCA 
+                                 1                                  1 
+                           AAGCATT                    AAGCTGAACACTATA 
+                                 1                                  1 
+                       AAGGCCTGTAG                   AAGGCTAAAACCCTCC 
+                                 1                                  1 
+                           AAGGTAG                              AAGTC 
+                                 1                                  1 
+                           AAGTGAA                    AAGTTTGTTTCTTAA 
+                                 1                                  1 
+                           AATAAAT                           AATAAATA 
+                                 1                                  1 
+                            AATAAG                          AATAAGCCA 
+                                 1                                  1 
+                        AATAATCAAT                             AATATT 
+                                 1                                  1 
+                      AATCATAGTTTA                        AATGACGTAGA 
+                                 1                                  1 
+                     AATGTAGCAATGT                            AATTCAC 
+                                 1                                  1 
+                            AATTGG                               ACAA 
+                                 1                                  1 
+                             ACAAT                          ACACACAGT 
+                                 1                                  1 
+                          ACACACAT                         ACACACTCCC 
+                                 1                                  1 
+                             ACAGG                         ACAGGATATT 
+                                 1                                  1 
+                           ACAGTTA                            ACATAGC 
+                                 1                                  1 
+                            ACATAT                    ACATTTTAATCTCAG 
+                                 1                                  1 
+                              ACCA                          ACCAACTAG 
+                                 1                                  1 
+                            ACCACA                      ACCATCCTAGCTA 
+                                 1                                  1 
+                             ACCCA                             ACCCCT 
+                                 1                                  1 
+                              ACCT                              ACCTC 
+                                 1                                  1 
+                        ACCTCACCCC                           ACCTTTTA 
+                                 1                                  1 
+                            ACGGGG                               ACGT 
+                                 1                                  1 
+                          ACTAAAGG                             ACTCGC 
+                                 1                                  1 
+                          ACTCTAAG                              ACTGT 
+                                 1                                  1 
+                             ACTTA                              ACTTC 
+                                 1                                  1 
+                          ACTTGCCC                           ACTTGTTT 
+                                 1                                  1 
+                         AGAACTATG                           AGAAGTGT 
+                                 1                                  1 
+                    AGAATGGTGTGAAC                         AGACACACAC 
+                                 1                                  1 
+                        AGACAGATTG                              AGAGA 
+                                 1                                  1 
+                            AGAGAC                           AGAGACAG 
+                                 1                                  1 
+       AGAGACTTTGAGAAATACTTTAAAAAT                           AGAGAGCA 
+                                 1                                  1 
+                           AGATTTC                              AGCAG 
+                                 1                                  1 
+                              AGCC                             AGCCTA 
+                                 1                                  1 
+                             AGGAG                        AGGAGGCCTGA 
+                                 1                                  1 
+                              AGGC                            AGGGATG 
+                                 1                                  1 
+                          AGGGTATC                           AGGGTGCT 
+                                 1                                  1 
+                              AGGT                    AGTAGAGGATAGAGT 
+                                 1                                  1 
+                        AGTCTCTGTT                              AGTGC 
+                                 1                                  1 
+                  AGTGTCCCCTGGGGTG                        AGTGTGTTGTC 
+                                 1                                  1 
+                          AGTTTTAT                             ATAAAA 
+                                 1                                  1 
+                     ATAAAATGATTGT                         ATAACGTATG 
+                                 1                                  1 
+                             ATAAG                           ATACATAA 
+                                 1                                  1 
+                           ATAGAAA                             ATAGAC 
+                                 1                                  1 
+                          ATAGATAC                               ATAT 
+                                 1                                  1 
+                             ATATA                           ATATAAAA 
+                                 1                                  1 
+                 ATATAATTAATTAGTTG                             ATATAC 
+                                 1                                  1 
+                    ATATACACATATAT                           ATATACAT 
+                                 1                                  1 
+                   ATATAGATATATAAC                            ATATATA 
+                                 1                                  1 
+ATATATAATATATATAATACATAAATATATATGT                       ATATATATACAC 
+                                 1                                  1 
+                        ATATATATAT                      ATATATATATATA 
+                                 1                                  1 
+                  ATATATATATATATAA                 ATATATATATATATATAA 
+                                 1                                  1 
+                             ATATT                ATATTCTTAGCTTTTCTCA 
+                                 1                                  1 
+                           ATATTTC                              ATCAA 
+                                 1                                  1 
+                            ATCAAG                          ATCAATATT 
+                                 1                                  1 
+                           ATCACTG                             ATCAGG 
+                                 1                                  1 
+                             ATCAT                               ATCT 
+                                 1                                  1 
+                             ATCTG                          ATCTGCTGT 
+                                 1                                  1 
+                             ATCTT                               ATGA 
+                                 1                                  1 
+                           ATGACGT                             ATGCAA 
+                                 1                                  1 
+                            ATGCTT                            ATGGAAC 
+                                 1                                  1 
+                        ATGGCGCACC                               ATGT 
+                                 1                                  1 
+                            ATGTAG                       ATGTATATATAA 
+                                 1                                  1 
+                           ATGTCTG                             ATGTGC 
+                                 1                                  1 
+                ATGTTTGATATGTAAAGT                              ATTAA 
+                                 1                                  1 
+                             ATTAC                              ATTAT 
+                                 1                                  1 
+                              ATTC                             ATTCTT 
+                                 1                                  1 
+                             ATTTA                         ATTTAAGAAA 
+                                 1                                  1 
+              ATTTAGAACTTTTGTTCTAA                           ATTTCAGA 
+                                 1                                  1 
+                         ATTTGTAAT                            CAAAACA 
+                                 1                                  1 
+                             CAAAC                              CAAAG 
+                                 1                                  1 
+                             CAAAT                               CAAC 
+                                 1                                  1 
+                            CAACAA                               CAAG 
+                                 1                                  1 
+                            CAAGGG                             CAATAG 
+                                 1                                  1 
+                             CAATG                     CACAAGTACCAGAA 
+                                 1                                  1 
+                  CACACACACACACACG                         CACACGCACG 
+                                 1                                  1 
+                          CACACTCA                       CACATCCAAAAG 
+                                 1                                  1 
+                            CACCAT                            CACCCCT 
+                                 1                                  1 
+                            CACCCT                       CACCTGTAGTCC 
+                                 1                                  1 
+                              CACG              CACGGGGGTACCCTCAGTACC 
+                                 1                                  1 
+                            CACTAC                           CAGAAGAA 
+                                 1                                  1 
+                        CAGAATTGCT                         CAGAGAGAGA 
+                                 1                                  1 
+                          CAGAGTTA                               CAGC 
+                                 1                                  1 
+                            CAGCCC                            CAGCCCC 
+                                 1                                  1 
+            CAGCCCCCACCAAAATCTTCCC                            CAGCTCA 
+                                 1                                  1 
+                            CAGGAG                  CAGGGGCCAGCGATCCA 
+                                 1                                  1 
+                      CATCCATCCATT                            CATCTAT 
+                                 1                                  1 
+                              CATG                              CATGC 
+                                 1                                  1 
+                          CATGGTGG                           CATTGTCT 
+                                 1                                  1 
+                        CCACGCTGGT                               CCAG 
+                                 1                                  1 
+                             CCAGG                             CCAGGT 
+                                 1                                  1 
+                       CCATATTCTAT                            CCATCAT 
+                                 1                                  1 
+                    CCATCCTCCAGGCT                               CCCA 
+                                 1                                  1 
+                             CCCCA                        CCCCAACAGCC 
+                                 1                                  1 
+                            CCCCTC                           CCCCTTAC 
+                                 1                                  1 
+                    CCCGCCACTGCCCT                          CCCTGTCTC 
+                                 1                                  1 
+                             CCCTT                              CCGGA 
+                                 1                                  1 
+                          CCGGTTAA                               CCGT 
+                                 1                                  1 
+                              CCTA                           CCTAAACT 
+                                 1                                  1 
+                            CCTAGG                           CCTATTGA 
+                                 1                                  1 
+                          CCTCTTTC                               CCTG 
+                                 1                                  1 
+                             CCTGA                        CCTGGAAGGTG 
+                                 1                                  1 
+                           CCTGGGA                              CCTGT 
+                                 1                                  1 
+                               CGA                              CGACA 
+                                 1                                  1 
+                              CGAG                              CGCCT 
+                                 1                                  1 
+                              CGCT                               CGGC 
+                                 1                                  1 
+                              CGGT                            CGGTAGT 
+                                 1                                  1 
+                             CGTCT                            CTAAAAC 
+                                 1                                  1 
+                          CTCACTAT                               CTCC 
+                                 1                                  1 
+            CTCCCAAGATGGTGGCGGGCCA                               CTCG 
+                                 1                                  1 
+                             CTCTC                       CTCTCTCTGTGT 
+                                 1                                  1 
+                           CTCTGGG                              CTCTT 
+                                 1                                  1 
+                          CTGATGTG                        CTGATTTTTTT 
+                                 1                                  1 
+                              CTGC                              CTGCA 
+                                 1                                  1 
+                            CTGCCA                            CTGCTCA 
+                                 1                                  1 
+                           CTGCTGT                    CTGCTGTGTGCCTGT 
+                                 1                                  1 
+                 CTGGACCACCCCGTCTC                             CTGGAG 
+                                 1                                  1 
+                         CTGGATCTG                            CTGGCTG 
+                                 1                                  1 
+                CTGTCTGTGGTCTTTTCC                              CTGTG 
+                                 1                                  1 
+                          CTGTGGGG                              CTGTT 
+                                 1                                  1 
+                             CTTAG                             CTTAGA 
+                                 1                                  1 
+               CTTAGGAAACAAAATAATA                           CTTCCTTT 
+                                 1                                  1 
+                         CTTCTGCCT                            CTTGAAG 
+                                 1                                  1 
+                             CTTTC                             CTTTGC 
+                                 1                                  1 
+                             CTTTT                          CTTTTGAAC 
+                                 1                                  1 
+                            CTTTTT                            CTTTTTA 
+                                 1                                  1 
+                        GAAACGCCTC                           GAAAGAAA 
+                                 1                                  1 
+                         GAAAGGAAG                              GAACC 
+                                 1                                  1 
+                           GAACGTA                          GAATAAGCC 
+                                 1                                  1 
+                      GAATATATATAC                            GAATTCC 
+                                 1                                  1 
+                              GACA                  GACCCACTGTGCCCCGA 
+                                 1                                  1 
+                       GACTAACATTT                               GAGA 
+                                 1                                  1 
+                            GAGAGA                               GAGC 
+                                 1                                  1 
+                            GAGCCC                              GAGCT 
+                                 1                                  1 
+                         GAGCTATCT                             GAGGAT 
+                                 1                                  1 
+                            GAGGCA                             GAGGCC 
+                                 1                                  1 
+                            GAGGCT                            GAGGTCC 
+                                 1                                  1 
+                          GAGGTCGT                              GAGTA 
+                                 1                                  1 
+                             GAGTC                           GAGTCAAG 
+                                 1                                  1 
+                           GAGTCAT                          GAGTGGGGT 
+                                 1                                  1 
+                            GAGTGT                               GATA 
+                                 1                                  1 
+                       GATAGATAGAT                               GATT 
+                                 1                                  1 
+                               GCA                               GCAA 
+                                 1                                  1 
+                   GCAAGATTATATAAA                            GCAATTT 
+                                 1                                  1 
+                             GCAGG                               GCAT 
+                                 1                                  1 
+                     GCCACCACCCCCG                              GCCCA 
+                                 1                                  1 
+                           GCCCGCT                              GCCCT 
+                                 1                                  1 
+                            GCCTAT                             GCCTGG 
+                                 1                                  1 
+                           GCGGGGC                               GCGT 
+                                 1                                  1 
+                              GCTA                      GCTAACGAATAAA 
+                                 1                                  1 
+                             GCTAC                             GCTATC 
+                                 1                                  1 
+                            GCTCTG                        GCTGGGCCTGT 
+                                 1                                  1 
+                        GCTGTCTTCA                               GGAG 
+                                 1                                  1 
+                           GGAGCCG                            GGAGCTG 
+                                 1                                  1 
+               GGAGCTGGGGCTGAGGCCA                  GGAGGGCGGCCGGGGAG 
+                                 1                                  1 
+                          GGAGTCCA                           GGAGTGAA 
+                                 1                                  1 
+                            GGAGTT                               GGAT 
+                                 1                                  1 
+                               GGC                          GGCCCCCCA 
+                                 1                                  1 
+                          GGCCCCTC                  GGCCGGGGAAGGAGGGC 
+                                 1                                  1 
+                            GGCGGA                  GGCGGGGGGCGGGGGGC 
+                                 1                                  1 
+                         GGCTCCAAT                               GGGA 
+                                 1                                  1 
+                             GGGAC                           GGGAGTCA 
+                                 1                                  1 
+                             GGGAT                   GGGATTCTTTTGCCTC 
+                                 1                                  1 
+                              GGGC                             GGGGCC 
+                                 1                                  1 
+                             GGGGG                             GGGGGG 
+                                 1                                  1 
+                           GGGGGGC                              GGGGT 
+                                 1                                  1 
+                            GGGGTC                             GGGTCC 
+                                 1                                  1 
+                 GGGTCTGTGACAGCGGC                 GGTAGAGGGAGCACTCCG 
+                                 1                                  1 
+                             GGTCC                             GGTCCC 
+                                 1                                  1 
+                           GGTCTCT                        GTAAGTAGACA 
+                                 1                                  1 
+                             GTAAT                       GTAGTATGCCAC 
+                                 1                                  1 
+                          GTATATAT                                GTC 
+                                 1                                  1 
+                          GTCAGAAG                          GTCCCGAAT 
+                                 1                                  1 
+                           GTCCCTG           GTCTCTGCGCCGCCGGGGACGTGT 
+                                 1                                  1 
+                             GTCTG                         GTCTTCATTT 
+                                 1                                  1 
+                    GTCTTTTGAGATAA                               GTGC 
+                                 1                                  1 
+                           GTGCCCA                               GTGG 
+                                 1                                  1 
+                           GTGGGGT                       GTGTGTGCGTGC 
+                                 1                                  1 
+                      GTGTGTGTGCGC                    GTTCCTGAGAATCAC 
+                                 1                                  1 
+                          GTTGCTAT                             GTTGTG 
+                                 1                                  1 
+                             GTTTT                             GTTTTC 
+                                 1                                  1 
+                         TAAAATAAA                            TAAAGAA 
+                                 1                                  1 
+                           TAAAGAC                         TAAATAGAAA 
+                                 1                                  1 
+                            TAAATT         TAACTTCTTTCCTTCTACATAGAGAG 
+                                 1                                  1 
+               TAATAGCAATCGATTTGGT                             TAATCT 
+                                 1                                  1 
+                             TAATT                           TAATTAAG 
+                                 1                                  1 
+                       TAATTATAATA                  TACAATGAAAAATTCAG 
+                                 1                                  1 
+          TACATATATATATATATATATATG                               TACC 
+                                 1                                  1 
+                              TACG                              TACTC 
+                                 1                                  1 
+                             TAGAG                               TAGC 
+                                 1                                  1 
+                             TAGCA                            TAGCTCC 
+                                 1                                  1 
+                              TAGG                         TAGTTGTAAG 
+                                 1                                  1 
+                             TATAA                             TATAAT 
+                                 1                                  1 
+                             TATAT                             TATATA 
+                                 1                                  1 
+                           TATATAA                       TATATATATATT 
+                                 1                                  1 
+                          TATATATT                             TATATG 
+                                 1                                  1 
+              TATATTTAATAACAGGGAAC                           TATCCCCG 
+                                 1                                  1 
+                      TATCTCTCCATA                           TATGAGAC 
+                                 1                                  1 
+                            TATGTA                             TATGTT 
+                                 1                                  1 
+                            TATTAC                           TATTAGAA 
+                                 1                                  1 
+                           TATTATG                             TATTTT 
+                                 1                                  1 
+                        TATTTTTCTT                           TCAAAATC 
+                                 1                                  1 
+                     TCATGCTTCTTCC                              TCCAA 
+                                 1                                  1 
+                         TCCCAGAAA          TCCCTCACCACCCTCCGTCTCTTCG 
+                                 1                                  1 
+                          TCCCTCCC                 TCCTGAGCTCCAGAACAT 
+                                 1                                  1 
+                              TCGT                          TCGTATCAC 
+                                 1                                  1 
+                             TCTAC                              TCTCT 
+                                 1                                  1 
+                    TCTCTCTTTCTCTT                             TCTCTT 
+                                 1                                  1 
+                      TCTCTTTCTCTT                              TCTGG 
+                                 1                                  1 
+                            TCTTCC                        TCTTCTTCTTC 
+                                 1                                  1 
+                             TCTTG                     TCTTGAATTATAGC 
+                                 1                                  1 
+                            TCTTTC                           TCTTTCTC 
+                                 1                                  1 
+                            TGAAGA                              TGAGA 
+                                 1                                  1 
+                             TGAGG                         TGAGGTGAGG 
+                                 1                                  1 
+                               TGC                               TGCA 
+                                 1                                  1 
+                              TGCC                              TGCCT 
+                                 1                                  1 
+                               TGG                              TGGAA 
+                                 1                                  1 
+                          TGGACTTC                              TGGAG 
+                                 1                                  1 
+                        TGGAGTGCAG                             TGGCCC 
+                                 1                                  1 
+              TGGCGCCCCTGGGCTGGGCA                        TGGGAGGAAAC 
+                                 1                                  1 
+                      TGGGCACACTGA                       TGGGCGGTGTGC 
+                                 1                                  1 
+                             TGGGG                             TGGGGG 
+                                 1                                  1 
+                            TGGGGT                               TGGT 
+                                 1                                  1 
+                           TGGTACA                             TGGTGT 
+                                 1                                  1 
+                      TGTAATGAAAAG                           TGTATATA 
+                                 1                                  1 
+                           TGTCAAA                   TGTCATCATAACCTCC 
+                                 1                                  1 
+                          TGTCTATG                             TGTCTG 
+                                 1                                  1 
+                          TGTCTTAG                              TGTGA 
+                                 1                                  1 
+                           TGTGCAT                             TGTGGC 
+                                 1                                  1 
+                        TGTGTGTGTA                         TGTGTGTGTG 
+                                 1                                  1 
+                             TGTTC                            TGTTCTC 
+                                 1                                  1 
+                             TGTTG                           TGTTGTTT 
+                                 1                                  1 
+                            TGTTTT                           TTAAACTA 
+                                 1                                  1 
+                            TTAAGA                      TTACTTCCTCCAC 
+                                 1                                  1 
+                             TTATA                             TTATAC 
+                                 1                                  1 
+                           TTATAGA                              TTATT 
+                                 1                                  1 
+                            TTATTA                      TTATTTATTTTTA 
+                                 1                                  1 
+                         TTATTTCAC                          TTCAATGTA 
+                                 1                                  1 
+                             TTCAG                          TTCATGGGT 
+                                 1                                  1 
+                            TTCTAA                              TTCTG 
+                                 1                                  1 
+                        TTCTGGGATC                   TTCTTTCTCTTTCTTT 
+                                 1                                  1 
+                              TTGA                              TTGAG 
+                                 1                                  1 
+                             TTGAT                           TTGATAAG 
+                                 1                                  1 
+                   TTGCCTTTAATGCAA                            TTGTATG 
+                                 1                                  1 
+                        TTGTGAAATA                             TTGTTT 
+                                 1                                  1 
+                      TTTAAAAAATGT                             TTTAGG 
+                                 1                                  1 
+                           TTTATTT                             TTTCAT 
+                                 1                                  1 
+                             TTTCC                              TTTCT 
+                                 1                                  1 
+                            TTTCTG                          TTTCTTTTC 
+                                 1                                  1 
+                             TTTGA                             TTTGCA 
+                                 1                                  1 
+                           TTTGTGA                             TTTTAA 
+                                 1                                  1 
+                           TTTTATA                    TTTTATTTTTTATTT 
+                                 1                                  1 
+                            TTTTGC                            TTTTTCT 
+                                 1                                  1 
+                            TTTTTG                     TTTTTGTTTGTTTG 
+                                 1                                  1 
+                            TTTTTT                           TTTTTTTG 
+                                 1                                  1 
+                             AAAAT                              AAGAT 
+                                 2                                  2 
+                             AATAA                               ACAC 
+                                 2                                  2 
+                              ACTA                                AGC 
+                                 2                                  2 
+                          AGGGAGGG                               AGTA 
+                                 2                                  2 
+                              AGTC                               AGTG 
+                                 2                                  2 
+                            ATAAGC                             ATATAT 
+                                 2                                  2 
+                              ATCA                               ATGG 
+                                 2                                  2 
+                              ATTG                               CACA 
+                                 2                                  2 
+                              CACT                            CACTAAG 
+                                 2                                  2 
+                             CAGGA                              CCAGA 
+                                 2                                  2 
+                              CCAT                               CCCT 
+                                 2                                  2 
+                               CCG                               CCTC 
+                                 2                                  2 
+                             CCTCC                               CCTT 
+                                 2                                  2 
+                               CGG                               CTGT 
+                                 2                                  2 
+                          CTGTAGGT                               CTTA 
+                                 2                                  2 
+                             CTTAA                               CTTC 
+                                 2                                  2 
+                             GAAAA                               GAAC 
+                                 2                                  2 
+                               GAC                               GACG 
+                                 2                                  2 
+                    GCATGGGGCTCCCT                             GGGGTG 
+                                 2                                  2 
+                              GGTA                               GTAT 
+                                 2                                  2 
+                              GTTC                               GTTG 
+                                 2                                  2 
+                             TAAAG                               TACA 
+                                 2                                  2 
+                              TAGA                              TATGC 
+                                 2                                  2 
+                             TATTT                          TCAAAATCT 
+                                 2                                  2 
+                              TCAC                               TCAT 
+                                 2                                  2 
+                              TCCC                               TGAG 
+                                 2                                  2 
+                              TGCT                               TGGG 
+                                 2                                  2 
+                              TGTC                           TGTTTGTG 
+                                 2                                  2 
+                             TTAAA                               TTAG 
+                                 2                                  2 
+                              TTCC                               TTGG 
+                                 2                                  2 
+                             TTGTC                              TTGTT 
+                                 2                                  2 
+                             TTTAT                              TTTGT 
+                                 2                                  2 
+                             TTTTA                              TTTTT 
+                                 2                                  2 
+                            TTTTTC                            TTTTTTG 
+                                 2                                  2 
+                              AAAA                              AAAAG 
+                                 3                                  3 
+                              AAGA                               AAGT 
+                                 3                                  3 
+                              ACAG                                ACC 
+                                 3                                  3 
+                               ACT                               AGAG 
+                                 3                                  3 
+                              AGCT                               AGGA 
+                                 3                                  3 
+                              ATTA                               CAAT 
+                                 3                                  3 
+                              CAGA                               CAGT 
+                                 3                                  3 
+                              CATT                                CTA 
+                                 3                                  3 
+                              GAAA                               GGCT 
+                                 3                                  3 
+                               GGT                               GTGA 
+                                 3                                  3 
+                              GTTT                               TAAA 
+                                 3                                  3 
+                              TAAC                               TAGT 
+                                 3                                  3 
+                              TCAA                               TCCT 
+                                 3                                  3 
+                              TGTA                               TTGC 
+                                 3                                  3 
+                             AAAAC                               AACT 
+                                 4                                  4 
+                              AATC                               AATG 
+                                 4                                  4 
+                              ACTC                               ACTG 
+                                 4                                  4 
+                              AGGG                               CTAT 
+                                 4                                  4 
+                              CTCA                               CTGA 
+                                 4                                  4 
+                              GAGT                                GCC 
+                                 4                                  4 
+                               GTG                               GTTA 
+                                 4                                  4 
+                             TAAGT                                TAC 
+                                 4                                  4 
+                              TCAG                               TCTA 
+                                 4                                  4 
+                              TGAT                               TTAC 
+                                 4                                  4 
+                              TTCA                               TTCT 
+                                 4                                  4 
+                             TTTTC                              TTTTG 
+                                 4                                  4 
+                              AAGG                               AATT 
+                                 5                                  5 
+                               CAG                                CCA 
+                                 5                                  5 
+                               CCC                               CTCT 
+                                 5                                  5 
+                              CTTT                                GGG 
+                                 5                                  5 
+                              TAAT                               TATA 
+                                 5                                  5 
+                               TCC                               TCTC 
+                                 5                                  5 
+                              TGAC                               TTAT 
+                                 5                                  5 
+                              ACAT                                AGA 
+                                 6                                  6 
+                              AGAC                                AGT 
+                                 6                                  6 
+                              AGTT                               ATAG 
+                                 6                                  6 
+                              CAAA                               CTAA 
+                                 6                                  6 
+                               GAT                               TAAG 
+                                 6                                  6 
+                               TCT                               TCTT 
+                                 6                                  6 
+                              TGAA                               TGTT 
+                                 6                                  6 
+                               AAA                               AACA 
+                                 7                                  7 
+                              AATA                               ATAA 
+                                 7                                  7 
+                               GAA                                TAG 
+                                 7                                  7 
+                              TATC                               TATG 
+                                 7                                  7 
+                              TCTG                                TGA 
+                                 7                                  7 
+                               TGT                               AAAG 
+                                 7                                  8 
+                              ACTT                               AGAA 
+                                 8                                  8 
+                              AGAT                                ATA 
+                                 8                                  8 
+                              ATAC                                ATC 
+                                 8                                  8 
+                               CAT                                CTG 
+                                 8                                  8 
+                               GAG                                TAT 
+                                 8                                  8 
+                               TCA                               TTAA 
+                                 8                                  8 
+                              TTTT                                ACA 
+                                 8                                  9 
+                               ATT                                CAA 
+                                 9                                  9 
+                               GTT                               TATT 
+                                 9                                  9 
+                              TGTG                                AGG 
+                                 9                                 10 
+                               CTC                               TTTC 
+                                10                                 10 
+                               ATG                               ATTT 
+                                11                                 11 
+                               CCT                               TTGT 
+                                11                                 12 
+                               TTA                                TTT 
+                                13                                 13 
+                              TTTG                                CTT 
+                                15                                 17 
+                               TAA                                AAT 
+                                17                                 18 
+                              AAAC                                 CG 
+                                19                                 20 
+                               TTG                               TTTA 
+                                21                                 22 
+                              AAAT                                AAC 
+                                23                                 23 
+                               AAG                                 GA 
+                                24                                 24 
+                                CC                                 GG 
+                                25                                 28 
+                                GC                                TTC 
+                                30                                 33 
+                                CA                                 GT 
+                                48                                 52 
+                                CT                                 AG 
+                                69                                 75 
+                                AA                                 TT 
+                                87                                 91 
+                                TC                                 TG 
+                               111                                123 
+                                AC                                 TA 
+                               124                                148 
+                                AT                                  - 
+                               154                              12445 
+                                 G                                  C 
+                            107364                             110512 
+                                 T                                  A 
+                            147781                             149456 
+> 
+> 
+> ## Further exploration of the "AAAC" variant
+> table (datos[,"genotipo"])["AAAC"]
+AAAC 
+  19 
+> 
+> ## If "genotipo" will not have NAs we could do
+> # datos[datos[,"genotipo"] == "AAAC",]
+> 
+> ## But with NAs we better use the __which__ function
+> datos[which (datos[,"genotipo"] == "AAAC"),]
+              id V2 type V4 V5 V6 chr        V8 V9          V10      sta
+68950    5843457  2    0  1  1  1  21 NT_011512 12 NT_011512.12 17651988
+195540  66603246  2    0  1  1  1  21 NT_011512 12 NT_011512.12 19338854
+292181 111615461  2    0  1  1  1  21 NT_011512 12 NT_011512.12 12190333
+317015 113387401  2    0  1  1  1  21 NT_011512 12 NT_011512.12 32620176
+395998 140639321  2    0  1  1  1  21 NT_011512 12 NT_011512.12 14189459
+408003 141645093  2    0  1  1  1  21 NT_011512 12 NT_011512.12 10593598
+433375 143796261  2    0  1  2  2  21 NT_011512 12 NT_011512.12 33201552
+433376 143796261  2    0  1  2  2  21 NT_187626  1  NT_187626.1    26803
+448674 145094614  2    0  1  1  1  21 NT_011512 12 NT_011512.12  7316777
+467697 146695223  2    0  1  1  1  21 NT_011512 12 NT_011512.12 10285824
+681630 199906938  2    0  1  1  1  21 NT_011512 12 NT_011512.12 31038918
+685832 200225250  2    0  1  1  1  21 NT_011512 12 NT_011512.12 18253942
+697618 201120254  2    0  1  1  1  21 NT_011512 12 NT_011512.12 19275572
+703290 201544389  2    0  1  1  1  21 NT_011512 12 NT_011512.12 11035085
+703513 201563137  2    0  1  1  1  21 NT_011512 12 NT_011512.12  3819169
+703700 201576256  2    0  1  1  1  21 NT_011512 12 NT_011512.12  9384762
+704398 201626552  2    0  1  1  1  21 NT_011512 12 NT_011512.12 30868128
+708777 201953664  2    0  1  1  1  21 NT_011512 12 NT_011512.12 27696316
+709911 202038416  2    0  1  1  1  21 NT_011512 12 NT_011512.12 14831172
+            end     gen        V14       V15 V16 V17 V18 V19 V20 V21    V22 V23
+68950  30617796         0.30780000 0.2432270  NA  33   0   1 126 138 GRCh38   0
+195540 32304662    MRAP 0.00000000 0.0000000  NA   0   1   1 130 138 GRCh38   0
+292181 25156141         0.42981600 0.1736840  NA  33   1   1 132 138 GRCh38   0
+317015 45585984         0.48158300 0.0941762  NA  33   1   1 132 138 GRCh38   0
+395998 27155267         0.42240600 0.1810420  NA  33   0   1 134 138 GRCh38   0
+408003 23559406         0.19895700 0.2447340  NA  33   0   1 134 138 GRCh38   0
+433375 46167360 SPATC1L 0.15545000 0.2314310  NA  33   0   1 134 138 GRCh38   0
+433376       NA SPATC1L 0.15545000 0.2314310  NA  33   0   1 134 138 GRCh38   0
+448674 20282585         0.03251160 0.1232830  NA  33   0   1 134 138 GRCh38   0
+467697 23251632         0.49351700 0.0565627  NA  33   0   1 134 138 GRCh38   0
+681630 44004726         0.00913984 0.0669804  NA  32   0   1 137 137 GRCh38   0
+685832 31219750   TIAM1 0.13141500 0.2200850  NA  32   0   1 137 137 GRCh38   0
+697618 32241380         0.08677770 0.1893640  NA  32   0   1 137 137 GRCh38   0
+703290 24000893         0.02269250 0.1040730  NA  32   0   1 137 137 GRCh38   0
+703513 16784977         0.03517070 0.1278610  NA  32   0   1 137 137 GRCh38   0
+703700 22350570         0.02089700 0.1000590  NA  32   0   1 137 137 GRCh38   0
+704398 43833936         0.02538150 0.1097570  NA  33   0   1 137 138 GRCh38   0
+708777 40662124   DSCAM 0.49956800 0.0146857  NA  32   0   1 137 137 GRCh38   0
+709911 27796980         0.02089700 0.1000590  NA  32   0   1 137 137 GRCh38   0
+       V24 V25              variant genotipo count        maf
+68950            AAAC:2178:0.190083     AAAC  2178   0.190083
+195540           AAAC:2178:0.261249     AAAC  2178   0.261249
+292181           AAAC:2178:0.312672     AAAC  2178   0.312672
+317015            AAAC:2178:0.40404     AAAC  2178    0.40404
+395998            AAAC:2178:0.30303     AAAC  2178    0.30303
+408003           AAAC:2178:0.112029     AAAC  2178   0.112029
+433375          AAAC:2178:0.0849403     AAAC  2178  0.0849403
+433376          AAAC:2178:0.0849403     AAAC  2178  0.0849403
+448674          AAAC:2178:0.0165289     AAAC  2178  0.0165289
+467697           AAAC:2178:0.443067     AAAC  2178   0.443067
+681630         AAAC:2178:0.00459137     AAAC  2178 0.00459137
+685832          AAAC:2178:0.0707071     AAAC  2178  0.0707071
+697618          AAAC:2178:0.0454545     AAAC  2178  0.0454545
+703290          AAAC:2178:0.0114784     AAAC  2178  0.0114784
+703513          AAAC:2178:0.0179063     AAAC  2178  0.0179063
+703700          AAAC:2178:0.0105601     AAAC  2178  0.0105601
+704398          AAAC:2178:0.0128558     AAAC  2178  0.0128558
+708777           AAAC:2178:0.485308     AAAC  2178   0.485308
+709911          AAAC:2178:0.0105601     AAAC  2178  0.0105601
+> 
+> 
+> ## we explore the number of missing genotypes
+> table (is.na (datos[,"genotipo"]))
+
+ FALSE   TRUE 
+530355 345646 
+> 
+> 
+> ## We explore the associated genes
+> datos[1:10, "gen"]
+ [1] "ETS2"                "COL6A2"              "ITGB2"              
+ [4] "ETS2"                "DONSON,SON"          ""                   
+ [7] "TMPRSS15"            "TMPRSS15"            ""                   
+[10] "LOC101928689,UBE2G2"
+> sort (table (datos[, "gen"]))[1:10]
+
+                    HLCS,SIM2              LINC00515,MRPL39 
+                            1                             1 
+           LOC101928689,SUMO3                  LOC102723451 
+                            1                             1 
+    LOC102723451,LOC102723553                       MIR6815 
+                            1                             1 
+                     TTC3-AS1                      FLJ41733 
+                            1                             2 
+                    LINC00112 LOC102723489,LOC642852,POFUT2 
+                            2                             2 
+> head (sort (table (datos[, "gen"])))  ## some genes have just one associated SNP
+
+                HLCS,SIM2          LINC00515,MRPL39        LOC101928689,SUMO3 
+                        1                         1                         1 
+             LOC102723451 LOC102723451,LOC102723553                   MIR6815 
+                        1                         1                         1 
+> tail (sort (table (datos[, "gen"])))  ## some others have many...
+
+    CHODL     TIAM1 LINC00478     NCAM2     DSCAM           
+     8017     10041     11817     12566     19590    501571 
+> 
+> ## find out the records associated to gene ETS2
+> table (datos[, "gen"] == "ETS2", exclude = NULL)
+
+ FALSE   TRUE   <NA> 
+875486    515      0 
+> 
+> posiciones <- datos[, "gen"] == "ETS2"
+> datos[posiciones, "id"] ## all rs ids associated to the gene
+  [1]       530       711     11254    374575    434421    457705    459411
+  [8]    460982    461155    714780    714781   1051420   1051425   1051475
+ [15]   1051476   1209952   1209953   1209954   1209955   1734587   1734588
+ [22]   1803557   2070529   2070530   2070531   2283638   2283639   2298560
+ [29]   3065531   3178021   3178022   3178023   3216358   3746882   3746883
+ [36]   3819590   3833351   5843933   6517481   7276184   7276961   7282703
+ [43]   7282723   8128227   8131905   8132038   8132237   8133034   8134428
+ [50]   8134490  10628360  10854389  11088449  11288156  11404875  11412191
+ [57]  11422952  11540409  11540812  11700777  11701440  11702084  11911369
+ [64]  12483154  13046062  13048966  13049792  17815967  17854245  28375993
+ [71]  28393803  28420538  28565186  33953058  34120017  34248663  34373350
+ [78]  34472454  34547022  34618019  34669702  34873733  34975268  35049775
+ [85]  35116887  35258008  35500015  35548432  35764229  35938948  35974253
+ [92]  36015447  41275642  41276544  55900648  56269044  57740627  58147311
+ [99]  58906699  59352622  59840000  60277131  60373276  60538921  61735785
+[106]  62217763  62217764  62217765  62217766  62217767  62217768  66718734
+[113]  71184643  71316657  72186335  73432803  73432816  73450548  73450552
+[120]  73450556  73450563  73903616  73903617  74496889  74551083  74765130
+[127]  74926996  75102785  75261542  75335956  75807938  76295888  76490364
+[134]  76540824  76772522  76822856  77035025  77265497  77488352  77688599
+[141]  77825039  77896035  78391361  78756499  79406319  79629222  79652204
+[148]  79950946  80182146  80218977 111253754 111819523 112116324 112358465
+[155] 112500163 112613130 112853203 112931002 113231408 113417859 113612605
+[162] 113798497 114118289 114244567 114425116 114460001 114481523 114562289
+[169] 114749538 114815090 114944291 114957306 115146137 115148137 115229247
+[176] 115297166 115319220 115426813 115486003 115610654 115786160 115832103
+[183] 115880316 115908228 116011345 116113541 116351373 116355602 116387099
+[190] 116476013 116698978 116771448 116878716 117333472 117862776 137953274
+[197] 138078742 138088077 138108381 138127643 138131997 138220874 138309022
+[204] 138783369 138866678 139052331 139241184 139268695 139305338 139406249
+[211] 139455779 139513072 139551402 139591312 139691558 139909964 140464352
+[218] 140559047 140609069 140728199 140874343 141076208 141191067 141324509
+[225] 141417031 141493936 141738765 141757268 141845442 142018888 142037689
+[232] 142089113 142499825 142517222 142580412 142665354 142871793 142922862
+[239] 142958770 142970446 143407258 143990983 144027915 144160533 144271394
+[246] 144867115 144954560 145107015 145145910 145180561 145301258 145954076
+[253] 146079228 146177907 146230611 146353309 146638244 146678871 146838884
+[260] 146881662 146930965 146998961 147035130 147401369 147436190 147629489
+[267] 147744979 147754962 147905372 148078116 148132256 148255715 149002382
+[274] 149038175 149232522 149529137 149548560 149674474 149703535 149896745
+[281] 150071097 150110201 150174386 150430243 150523517 150577069 150592938
+[288] 150827952 150924860 151101102 180778410 180829823 180895537 181145549
+[295] 181149750 181158989 181620381 181715446 181719158 181779945 181870579
+[302] 182232925 182273992 182378569 182469652 182523296 183005689 183031035
+[309] 183170392 183216601 183358946 183629906 183844458 184042774 184055024
+[316] 184634189 184674081 184742602 184861649 184970840 184983267 185172042
+[323] 185407591 185638636 185660098 185704704 186005905 186217953 186223267
+[330] 186269053 186518247 186908558 186919450 187012366 187047224 187094954
+[337] 187165664 187257185 187312143 187747596 187801814 188006344 188042674
+[344] 188043550 188051027 188181785 188548717 188627740 188812927 188854909
+[351] 188875406 189128560 189269697 189502085 189676363 189757423 189931170
+[358] 190067372 190307799 190342128 190801053 190840182 190984898 191289418
+[365] 191293935 191301928 191542344 191823073 191832014 192136923 192182791
+[372] 192285315 192411159 192619285 192880566 192909371 193090974 193290171
+[379] 199669733 199778083 200475079 200586471 200769822 200893699 200961208
+[386] 201065633 201143455 201157283 201321686 201333044 201404243 201705823
+[393] 201752513 201764881 201897945 201952316 202089652 202158735 202193691
+[400] 367566882 367592730 367939760 367961435 368056782 368170438 368171231
+[407] 368186095 368226367 368261290 368271003 368429511 368439249 368600334
+[414] 368663952 368732997 368795899 368810027 368890928 369131077 369174460
+[421] 369275196 369400303 369420539 369448029 369504267 369522693 369614292
+[428] 369637673 369873980 369890724 369913456 370030170 370102238 370230885
+[435] 370263050 370305902 370469623 370954769 371058674 371080491 371316224
+[442] 371390624 371475880 371568403 371613958 371820145 371902551 372145357
+[449] 372542511 372554736 372641031 372712009 372743208 372768170 372784363
+[456] 372831939 372906186 372969588 373152692 373207451 373241431 373484910
+[463] 373528821 373599748 373699281 373719884 373754896 373849685 373935003
+[470] 374239781 374338058 374461164 374518609 374709452 374779191 374897934
+[477] 374994045 375011775 375060570 375677993 375742042 375885629 376004538
+[484] 376307246 376310036 376510303 376514555 376534683 376555944 376609043
+[491] 376623211 376635475 377038903 377242817 377317602 377336189 377345933
+[498] 377419137 377558923 377597393 377666037 386464728 386464762 386478233
+[505] 386818481 386818482 397745299 397750360 397828592 397840232 397840835
+[512] 397866511 397965314 398036436 398081595
+> 
+> 
+> ##Explore the length
+> ##It is too long.
+> ##It must be the gene length, not the variant length.
+> datos[,"lon"] <- datos[, "end"] - datos[,"sta"]
+> summary (datos[,"lon"])
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+ 6211000 12970000 12970000 12730000 12970000 12970000    19406 
+> 
+> 
+> ################################################################################
+> 
+> ## Explore the BED file
+> bed[1:3,]
+    chr      sta      end    id V5 strand
+1 chr21 38823352 38823353 rs530  0      -
+2 chr21 46129654 46129655 rs559  0      -
+3 chr21 44886245 44886246 rs684  0      -
+> 
+> ## Compute the length of the features (variants)
+> bed[,"lon"] <- bed[,"end"] - bed[,"sta"]
+> summary (bed[,"lon"])
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+   0.000    1.000    1.000    1.116    1.000 3547.000 
+> 
+> ## The ids in the bed file have the "rs" prefix but hot the ones in datos
+> head (bed)
+    chr      sta      end    id V5 strand lon
+1 chr21 38823352 38823353 rs530  0      -   1
+2 chr21 46129654 46129655 rs559  0      -   1
+3 chr21 44886245 44886246 rs684  0      -   1
+4 chr21 38823134 38823135 rs711  0      +   1
+5 chr21 33577066 33577067 rs716  0      -   1
+6 chr21 26698376 26698377 rs773  0      -   1
+> head (datos)
+   id V2 type V4 V5 V6 chr        V8 V9          V10      sta      end
+1 530  2    0  1  1  1  21 NT_011512 12 NT_011512.12 25857545 38823353
+2 559  2    0  1  1  1  21 NT_011512 12 NT_011512.12 33163847 46129655
+3 684  2    0  1  1  1  21 NT_011512 12 NT_011512.12 31920438 44886246
+4 711  2    0  1  1  1  21 NT_011512 12 NT_011512.12 25857327 38823135
+5 716  2    0  1  1  1  21 NT_011512 12 NT_011512.12 20611259 33577067
+6 773  2    0  1  1  1  21 NT_011512 12 NT_011512.12 13732569 26698377
+         gen      V14      V15 V16 V17 V18 V19 V20 V21    V22 V23 V24 V25
+1       ETS2 0.454364 0.143998  NA  59   1   1  36 138 GRCh38   0        
+2     COL6A2 0.322416 0.239282  NA  59   1   1  36 138 GRCh38   0        
+3      ITGB2 0.274090 0.248837  NA  59   1   1  36 138 GRCh38   0        
+4       ETS2 0.464052 0.129159  NA  59   1   1  36 138 GRCh38   0        
+5 DONSON,SON 0.000000 0.000000  NA  17   1   1  36 138 GRCh38   0        
+6            0.363018 0.222995  NA  63   1   1  36 138 GRCh38   0        
+          variant genotipo count      maf      lon
+1 T:2178:0.348944        T  2178 0.348944 12965808
+2  C:2178:0.20202        C  2178  0.20202 12965808
+3 T:2178:0.163912        T  2178 0.163912 12965808
+4 A:2178:0.365932        A  2178 0.365932 12965808
+5                     <NA>  <NA>     <NA> 12965808
+6 G:2178:0.238292        G  2178 0.238292 12965808
+> 
+> ## we create a new variable without the "rs" in bed
+> bed[,"idSin"] <- as.integer (sub ("rs", "", bed[, "id"]))
+> class (bed[,"idSin"])
+[1] "integer"
+> class (as.integer (bed[,"idSin"]))
+[1] "integer"
+> 
+> ## and a new variable with the "rs" in datos
+> datos[,"idCon"] <- paste0 ("rs", datos[, "id"])
+> datos[1:10,]
+     id V2 type V4 V5 V6 chr        V8 V9          V10      sta      end
+1   530  2    0  1  1  1  21 NT_011512 12 NT_011512.12 25857545 38823353
+2   559  2    0  1  1  1  21 NT_011512 12 NT_011512.12 33163847 46129655
+3   684  2    0  1  1  1  21 NT_011512 12 NT_011512.12 31920438 44886246
+4   711  2    0  1  1  1  21 NT_011512 12 NT_011512.12 25857327 38823135
+5   716  2    0  1  1  1  21 NT_011512 12 NT_011512.12 20611259 33577067
+6   773  2    0  1  1  1  21 NT_011512 12 NT_011512.12 13732569 26698377
+7   927  2    0  1  1  1  21 NT_011512 12 NT_011512.12  5303897 18269705
+8  1005  2    0  1  1  1  21 NT_011512 12 NT_011512.12  5303898 18269706
+9  1033  2    0  1  1  1  21 NT_011512 12 NT_011512.12  2557157 15522965
+10 1141  2    0  1  1  1  21 NT_011512 12 NT_011512.12 31835444 44801252
+                   gen      V14      V15 V16 V17 V18 V19 V20 V21    V22 V23 V24
+1                 ETS2 0.454364 0.143998  NA  59   1   1  36 138 GRCh38   0    
+2               COL6A2 0.322416 0.239282  NA  59   1   1  36 138 GRCh38   0    
+3                ITGB2 0.274090 0.248837  NA  59   1   1  36 138 GRCh38   0    
+4                 ETS2 0.464052 0.129159  NA  59   1   1  36 138 GRCh38   0    
+5           DONSON,SON 0.000000 0.000000  NA  17   1   1  36 138 GRCh38   0    
+6                      0.363018 0.222995  NA  63   1   1  36 138 GRCh38   0    
+7             TMPRSS15 0.264736 0.249565  NA  43   1   1  36 138 GRCh38   0    
+8             TMPRSS15 0.000000 0.000000  NA   0   0   1  36  36 GRCh38   0    
+9                      0.159252 0.232948  NA  51   1   1  36 138 GRCh38   0    
+10 LOC101928689,UBE2G2 0.200382 0.245027  NA  55   1   1  36 138 GRCh38   0    
+   V25         variant genotipo count      maf      lon  idCon
+1      T:2178:0.348944        T  2178 0.348944 12965808  rs530
+2       C:2178:0.20202        C  2178  0.20202 12965808  rs559
+3      T:2178:0.163912        T  2178 0.163912 12965808  rs684
+4      A:2178:0.365932        A  2178 0.365932 12965808  rs711
+5                          <NA>  <NA>     <NA> 12965808  rs716
+6      G:2178:0.238292        G  2178 0.238292 12965808  rs773
+7      T:2178:0.157025        T  2178 0.157025 12965808  rs927
+8                          <NA>  <NA>     <NA> 12965808 rs1005
+9      T:2178:0.087236        T  2178 0.087236 12965808 rs1033
+10     C:2178:0.112948        C  2178 0.112948 12965808 rs1141
+> 
+> 
+> ## Explore duplicated ids
+> table (duplicated (datos[,"id"]))
+
+ FALSE   TRUE 
+856660  19341 
+> table (duplicated (  bed[,"id"]))
+
+ FALSE 
+856595 
+> 
+> 
+> ## Explore the common and different ids
+> length (intersect (bed[, "id"], datos[,"idCon"]))
+[1] 856595
+> 
+> setdiff (bed[,"id"], datos[,"idCon"]) ## all ids in bed are in datos
+character(0)
+> setdiff (datos[,"idCon"], bed[,"id"]) ## some ids in datos are not in bed
+ [1] "rs36126938" "rs36127045" "rs36127462" "rs36127759" "rs36129788"
+ [6] "rs36132064" "rs36133061" "rs36133711" "rs36134081" "rs36134237"
+[11] "rs36137518" "rs36138968" "rs36139860" "rs36143441" "rs36144357"
+[16] "rs36145727" "rs36146336" "rs36146543" "rs36146658" "rs36148169"
+[21] "rs36149346" "rs36149966" "rs36150152" "rs36150854" "rs36153001"
+[26] "rs36154137" "rs36154702" "rs36154734" "rs36156599" "rs36156618"
+[31] "rs36158367" "rs36158590" "rs36160041" "rs36161213" "rs36164617"
+[36] "rs36165387" "rs36166428" "rs36169227" "rs36170984" "rs36175583"
+[41] "rs36175611" "rs36175780" "rs36176405" "rs36177064" "rs36177430"
+[46] "rs36179042" "rs36181463" "rs36182427" "rs36184750" "rs36185227"
+[51] "rs36188440" "rs36189336" "rs36189537" "rs36190105" "rs36190575"
+[56] "rs36191439" "rs36196253" "rs36197356" "rs74193373" "rs74199251"
+[61] "rs74203555" "rs74206954" "rs74218322" "rs74218611" "rs74222163"
+> 
+> 
+> ##There is some duplicated information in datos
+> table (duplicated (datos[,c("idCon", "genotipo")]))
+
+ FALSE   TRUE 
+856660  19341 
+> 
+> unico <- unique (datos[,c("idCon", "genotipo")])
+> dim (unico)
+[1] 856660      2
+> table (duplicated (unico[,"idCon"]))
+
+ FALSE 
+856660 
+> unico[1:10,]
+    idCon genotipo
+1   rs530        T
+2   rs559        C
+3   rs684        T
+4   rs711        A
+5   rs716     <NA>
+6   rs773        G
+7   rs927        T
+8  rs1005     <NA>
+9  rs1033        T
+10 rs1141        C
+> 
+> bed[1:10,]
+     chr      sta      end     id V5 strand lon idSin
+1  chr21 38823352 38823353  rs530  0      -   1   530
+2  chr21 46129654 46129655  rs559  0      -   1   559
+3  chr21 44886245 44886246  rs684  0      -   1   684
+4  chr21 38823134 38823135  rs711  0      +   1   711
+5  chr21 33577066 33577067  rs716  0      -   1   716
+6  chr21 26698376 26698377  rs773  0      -   1   773
+7  chr21 18269704 18269705  rs927  0      -   1   927
+8  chr21 18269705 18269706 rs1005  0      -   1  1005
+9  chr21 15522964 15522965 rs1033  0      +   1  1033
+10 chr21 44801251 44801252 rs1141  0      -   1  1141
+> 
+> 
+> ## Now we can merge the two datasets
+> ## This will include the variant genotype into the bed file
+> datos2 <- merge (bed, unico, by.x = "id", by.y = "idCon")
+> dim (datos2)
+[1] 856595      9
+> datos2[1:3,]
+         id   chr      sta      end V5 strand lon   idSin genotipo
+1 rs1000005 chr21 33060744 33060745  0      +   1 1000005        G
+2 rs1000026 chr21 37562296 37562297  0      -   1 1000026        T
+3 rs1000051 chr21 15328566 15328567  0      +   1 1000051        T
+> 
+> proc.time()
+   user  system elapsed 
+ 37.055   0.158  37.194 

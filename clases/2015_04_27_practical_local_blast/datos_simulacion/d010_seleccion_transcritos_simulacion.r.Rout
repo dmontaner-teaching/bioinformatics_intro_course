@@ -1,0 +1,477 @@
+
+R version 3.0.2 (2013-09-25) -- "Frisbee Sailing"
+Copyright (C) 2013 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##d010_seleccion_transcritos_simulacion.r
+> ##2014-04-14 dmontaner@cipf.es
+> ##generamos los datasets para los alumnos
+> ##Seleccionamos los transcritos de un gen con varios transcritos
+> 
+> ## grep "^21" Homo_sapiens.GRCh37.75.gtf > Homo_sapiens_21.gtf
+> 
+> ## http://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000166157;r=21:10906201-11029719
+> ## http://www.ensembl.org/info/website/upload/gff.html
+> 
+> date ()
+[1] "Mon Apr 14 16:47:40 2014"
+> Sys.info ()[c("nodename", "user")]
+   nodename        user 
+     "dlap" "dmontaner" 
+> commandArgs ()
+[1] "/usr/local/lib64/R/bin/exec/R"                                                                                                                                          
+[2] "-f"                                                                                                                                                                     
+[3] "/home/dmontaner/documentos/masterUV/mis_cursos/NOCIONES_BASICAS_2013_2014/clases/2014_14_practical_local_blast/datos_simulacion/d010_seleccion_transcritos_simulacion.r"
+[4] "--restore"                                                                                                                                                              
+[5] "--save"                                                                                                                                                                 
+[6] "--no-readline"                                                                                                                                                          
+[7] "--no-save"                                                                                                                                                              
+[8] "--no-restore"                                                                                                                                                           
+> rm (list = ls ())
+> R.version.string ##"R version 3.0.2 (2013-09-25)"
+[1] "R version 3.0.2 (2013-09-25)"
+> library (Biostrings); packageDescription ("Biostrings", fields = "Version") #"1.20.0"
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:stats’:
+
+    xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, as.vector, cbind, colnames,
+    duplicated, eval, evalq, Filter, Find, get, intersect, is.unsorted,
+    lapply, Map, mapply, match, mget, order, paste, pmax, pmax.int,
+    pmin, pmin.int, Position, rank, rbind, Reduce, rep.int, rownames,
+    sapply, setdiff, sort, table, tapply, union, unique, unlist
+
+Loading required package: IRanges
+Loading required package: XVector
+[1] "2.30.1"
+> 
+> ###DATOS
+> setwd ("/home/dmontaner/documentos/masterUV/mis_cursos/NOCIONES_BASICAS_2013_2014/clases/2014_14_practical_local_blast/data")
+> dir ()
+[1] "basura"                                     
+[2] "Homo_sapiens_21.gtf"                        
+[3] "Homo_sapiens.GRCh37.74.dna.chromosome.21.fa"
+[4] "Homo_sapiens.GRCh37.75.cds.all.fa"          
+[5] "Homo_sapiens.GRCh37.75.gtf"                 
+> 
+> 
+> ## GTF
+> #gtf <- read.table (file = "Homo_sapiens.GRCh37.75.gtf", header = FALSE, sep = "\t", quote = "", as.is = TRUE, nrow = 100)
+> ##system.time (gtf <- read.table (file = "Homo_sapiens.GRCh37.75.gtf", header = FALSE, sep = "\t", quote = "", colClasses = sapply (gtf, class)))  ## VER LAS x
+> #system.time (gtf <- read.table (file = "Homo_sapiens.GRCh37.75.gtf", header = FALSE, sep = "\t", quote = "", as.is = TRUE))
+> system.time (gtf <- read.table (file = "Homo_sapiens_21.gtf", header = FALSE, sep = "\t", quote = "", as.is = TRUE))
+   user  system elapsed 
+  0.515   0.000   0.515 
+> colnames (gtf) <- c("seqname", "source", "feature", "start", "end", "score", "strand", "frame", "attribute")
+> dim (gtf)
+[1] 27824     9
+> gtf[1:3,]
+  seqname source    feature   start     end score strand frame
+1      21  miRNA       gene 9683191 9683272     .      +     .
+2      21  miRNA transcript 9683191 9683272     .      +     .
+3      21  miRNA       exon 9683191 9683272     .      +     .
+                                                                                                                                                                                                                                    attribute
+1                                                                                                                                             gene_id "ENSG00000238411"; gene_name "CR381670.1"; gene_source "ensembl"; gene_biotype "miRNA";
+2                                             gene_id "ENSG00000238411"; transcript_id "ENST00000459169"; gene_name "CR381670.1"; gene_source "ensembl"; gene_biotype "miRNA"; transcript_name "CR381670.1-201"; transcript_source "ensembl";
+3 gene_id "ENSG00000238411"; transcript_id "ENST00000459169"; exon_number "1"; gene_name "CR381670.1"; gene_source "ensembl"; gene_biotype "miRNA"; transcript_name "CR381670.1-201"; transcript_source "ensembl"; exon_id "ENSE00001809100";
+> colnames (gtf)
+[1] "seqname"   "source"    "feature"   "start"     "end"       "score"    
+[7] "strand"    "frame"     "attribute"
+> str (gtf)
+'data.frame':	27824 obs. of  9 variables:
+ $ seqname  : int  21 21 21 21 21 21 21 21 21 21 ...
+ $ source   : chr  "miRNA" "miRNA" "miRNA" "miRNA" ...
+ $ feature  : chr  "gene" "transcript" "exon" "gene" ...
+ $ start    : int  9683191 9683191 9683191 9825832 9825832 9825832 9826203 9826203 9826203 9907190 ...
+ $ end      : int  9683272 9683272 9683272 9826011 9826011 9826011 9826263 9826263 9826263 9968585 ...
+ $ score    : chr  "." "." "." "." ...
+ $ strand   : chr  "+" "+" "+" "+" ...
+ $ frame    : chr  "." "." "." "." ...
+ $ attribute: chr  "gene_id \"ENSG00000238411\"; gene_name \"CR381670.1\"; gene_source \"ensembl\"; gene_biotype \"miRNA\";" "gene_id \"ENSG00000238411\"; transcript_id \"ENST00000459169\"; gene_name \"CR381670.1\"; gene_source \"ensembl\"; gene_biotype"| __truncated__ "gene_id \"ENSG00000238411\"; transcript_id \"ENST00000459169\"; exon_number \"1\"; gene_name \"CR381670.1\"; gene_source \"ense"| __truncated__ "gene_id \"ENSG00000264462\"; gene_name \"MIR3648\"; gene_source \"ensembl\"; gene_biotype \"miRNA\";" ...
+> 
+> table (gtf[,"seqname"])
+
+   21 
+27824 
+> table (gtf[,"source"])
+
+                         antisense                          IG_V_gene 
+                               620                                 13 
+                           lincRNA                              miRNA 
+                              1149                                 95 
+                          misc_RNA            nonsense_mediated_decay 
+                                47                               1926 
+              processed_pseudogene               processed_transcript 
+                               282                               2306 
+                    protein_coding                         pseudogene 
+                             19466                                171 
+                   retained_intron                               rRNA 
+                              1281                                 15 
+                    sense_intronic                  sense_overlapping 
+                                83                                 42 
+                            snoRNA                              snRNA 
+                                63                                 63 
+  transcribed_processed_pseudogene transcribed_unprocessed_pseudogene 
+                                 2                                115 
+            unprocessed_pseudogene 
+                                85 
+> table (gtf[,"feature"])
+
+        CDS        exon        gene start_codon  stop_codon  transcript 
+       7570       13350         736         687         694        2178 
+        UTR 
+       2609 
+> table (gtf[,"frame"])
+
+    .     0     1     2 
+18873  5224  1305  2422 
+> 
+> table (gtf[,"source"], gtf[,"feature"])
+                                    
+                                      CDS exon gene start_codon stop_codon
+  antisense                             0  396   75           0          0
+  IG_V_gene                             4    4    1           1          1
+  lincRNA                               0  767  145           0          0
+  miRNA                                 0   32   31           0          0
+  misc_RNA                              0   16   15           0          0
+  nonsense_mediated_decay             459  805    0          47         50
+  processed_pseudogene                  0  154    0           0          0
+  processed_transcript                  0 1953    6           0          0
+  protein_coding                     7107 7859  242         639        643
+  pseudogene                            0   13  152           0          0
+  retained_intron                       0 1060    0           0          0
+  rRNA                                  0    5    5           0          0
+  sense_intronic                        0   47   16           0          0
+  sense_overlapping                     0   26    6           0          0
+  snoRNA                                0   21   21           0          0
+  snRNA                                 0   21   21           0          0
+  transcribed_processed_pseudogene      0    1    0           0          0
+  transcribed_unprocessed_pseudogene    0  106    0           0          0
+  unprocessed_pseudogene                0   64    0           0          0
+                                    
+                                     transcript  UTR
+  antisense                                 149    0
+  IG_V_gene                                   2    0
+  lincRNA                                   237    0
+  miRNA                                      32    0
+  misc_RNA                                   16    0
+  nonsense_mediated_decay                    85  480
+  processed_pseudogene                      128    0
+  processed_transcript                      347    0
+  protein_coding                            847 2129
+  pseudogene                                  6    0
+  retained_intron                           221    0
+  rRNA                                        5    0
+  sense_intronic                             20    0
+  sense_overlapping                          10    0
+  snoRNA                                     21    0
+  snRNA                                      21    0
+  transcribed_processed_pseudogene            1    0
+  transcribed_unprocessed_pseudogene          9    0
+  unprocessed_pseudogene                     21    0
+> table (gtf[,"source"], gtf[,"frame"])
+                                    
+                                         .     0     1     2
+  antisense                            620     0     0     0
+  IG_V_gene                              7     4     0     2
+  lincRNA                             1149     0     0     0
+  miRNA                                 95     0     0     0
+  misc_RNA                              47     0     0     0
+  nonsense_mediated_decay             1370   319    85   152
+  processed_pseudogene                 282     0     0     0
+  processed_transcript                2306     0     0     0
+  protein_coding                     11077  4901  1220  2268
+  pseudogene                           171     0     0     0
+  retained_intron                     1281     0     0     0
+  rRNA                                  15     0     0     0
+  sense_intronic                        83     0     0     0
+  sense_overlapping                     42     0     0     0
+  snoRNA                                63     0     0     0
+  snRNA                                 63     0     0     0
+  transcribed_processed_pseudogene       2     0     0     0
+  transcribed_unprocessed_pseudogene   115     0     0     0
+  unprocessed_pseudogene                85     0     0     0
+> table (gtf[,"source"], gtf[,"strand"])
+                                    
+                                        -    +
+  antisense                           219  401
+  IG_V_gene                             0   13
+  lincRNA                             594  555
+  miRNA                                33   62
+  misc_RNA                             24   23
+  nonsense_mediated_decay            1207  719
+  processed_pseudogene                162  120
+  processed_transcript                912 1394
+  protein_coding                     9486 9980
+  pseudogene                           97   74
+  retained_intron                     579  702
+  rRNA                                  0   15
+  sense_intronic                       49   34
+  sense_overlapping                    16   26
+  snoRNA                               33   30
+  snRNA                                24   39
+  transcribed_processed_pseudogene      2    0
+  transcribed_unprocessed_pseudogene   57   58
+  unprocessed_pseudogene               54   31
+> 
+> table (gtf[,"feature"], gtf[,"source"])
+             
+              antisense IG_V_gene lincRNA miRNA misc_RNA
+  CDS                 0         4       0     0        0
+  exon              396         4     767    32       16
+  gene               75         1     145    31       15
+  start_codon         0         1       0     0        0
+  stop_codon          0         1       0     0        0
+  transcript        149         2     237    32       16
+  UTR                 0         0       0     0        0
+             
+              nonsense_mediated_decay processed_pseudogene processed_transcript
+  CDS                             459                    0                    0
+  exon                            805                  154                 1953
+  gene                              0                    0                    6
+  start_codon                      47                    0                    0
+  stop_codon                       50                    0                    0
+  transcript                       85                  128                  347
+  UTR                             480                    0                    0
+             
+              protein_coding pseudogene retained_intron rRNA sense_intronic
+  CDS                   7107          0               0    0              0
+  exon                  7859         13            1060    5             47
+  gene                   242        152               0    5             16
+  start_codon            639          0               0    0              0
+  stop_codon             643          0               0    0              0
+  transcript             847          6             221    5             20
+  UTR                   2129          0               0    0              0
+             
+              sense_overlapping snoRNA snRNA transcribed_processed_pseudogene
+  CDS                         0      0     0                                0
+  exon                       26     21    21                                1
+  gene                        6     21    21                                0
+  start_codon                 0      0     0                                0
+  stop_codon                  0      0     0                                0
+  transcript                 10     21    21                                1
+  UTR                         0      0     0                                0
+             
+              transcribed_unprocessed_pseudogene unprocessed_pseudogene
+  CDS                                          0                      0
+  exon                                       106                     64
+  gene                                         0                      0
+  start_codon                                  0                      0
+  stop_codon                                   0                      0
+  transcript                                   9                     21
+  UTR                                          0                      0
+> 
+> touse <- gtf[,"source"] == "protein_coding" & gtf[,"feature"] == "gene"
+> table (touse)
+touse
+FALSE  TRUE 
+27582   242 
+> gtf[touse,][1:10,]
+     seqname         source feature    start      end score strand frame
+65        21 protein_coding    gene 10906201 11029719     .      -     .
+389       21 protein_coding    gene 14741931 14745386     .      -     .
+453       21 protein_coding    gene 14982498 15013906     .      +     .
+494       21 protein_coding    gene 15051621 15053459     .      -     .
+658       21 protein_coding    gene 15481134 15583166     .      -     .
+720       21 protein_coding    gene 15588451 15600693     .      +     .
+847       21 protein_coding    gene 15743436 15755805     .      -     .
+880       21 protein_coding    gene 15857549 15955723     .      -     .
+953       21 protein_coding    gene 15964251 16031142     .      -     .
+1038      21 protein_coding    gene 16333556 16437321     .      -     .
+                                                                                                       attribute
+65     gene_id "ENSG00000166157"; gene_name "TPTE"; gene_source "ensembl_havana"; gene_biotype "protein_coding";
+389     gene_id "ENSG00000256715"; gene_name "AL050302.1"; gene_source "ensembl"; gene_biotype "protein_coding";
+453   gene_id "ENSG00000166351"; gene_name "POTED"; gene_source "ensembl_havana"; gene_biotype "protein_coding";
+494     gene_id "ENSG00000269011"; gene_name "AL050303.1"; gene_source "ensembl"; gene_biotype "protein_coding";
+658    gene_id "ENSG00000188992"; gene_name "LIPI"; gene_source "ensembl_havana"; gene_biotype "protein_coding";
+720   gene_id "ENSG00000185272"; gene_name "RBM11"; gene_source "ensembl_havana"; gene_biotype "protein_coding";
+847  gene_id "ENSG00000155304"; gene_name "HSPA13"; gene_source "ensembl_havana"; gene_biotype "protein_coding";
+880  gene_id "ENSG00000155307"; gene_name "SAMSN1"; gene_source "ensembl_havana"; gene_biotype "protein_coding";
+953      gene_id "ENSG00000243440"; gene_name "AF165138.7"; gene_source "havana"; gene_biotype "protein_coding";
+1038  gene_id "ENSG00000180530"; gene_name "NRIP1"; gene_source "ensembl_havana"; gene_biotype "protein_coding";
+> 
+> migen <- "ENSG00000166157"
+> sel <- grepl (migen, gtf[,"attribute"])
+> table (sel)
+sel
+FALSE  TRUE 
+27597   227 
+> 
+> touse <- gtf[,"source"] == "protein_coding" & gtf[,"feature"] == "transcript" & sel
+> table (touse)
+touse
+FALSE  TRUE 
+27820     4 
+> gtf[touse,] ## ver : http://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000166157;r=21:10906201-11029719
+    seqname         source    feature    start      end score strand frame
+66       21 protein_coding transcript 10906201 10990920     .      -     .
+117      21 protein_coding transcript 10906741 10990882     .      -     .
+170      21 protein_coding transcript 10906741 10990882     .      -     .
+272      21 protein_coding transcript 10951266 10990883     .      -     .
+                                                                                                                                                                                                                                      attribute
+66  gene_id "ENSG00000166157"; transcript_id "ENST00000298232"; gene_name "TPTE"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "TPTE-001"; transcript_source "ensembl_havana"; tag "CCDS"; ccds_id "CCDS33512";
+117 gene_id "ENSG00000166157"; transcript_id "ENST00000361285"; gene_name "TPTE"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "TPTE-002"; transcript_source "ensembl_havana"; tag "CCDS"; ccds_id "CCDS13560";
+170 gene_id "ENSG00000166157"; transcript_id "ENST00000342420"; gene_name "TPTE"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "TPTE-003"; transcript_source "ensembl_havana"; tag "CCDS"; ccds_id "CCDS33511";
+272     gene_id "ENSG00000166157"; transcript_id "ENST00000328758"; gene_name "TPTE"; gene_source "ensembl_havana"; gene_biotype "protein_coding"; transcript_name "TPTE-005"; transcript_source "havana"; tag "cds_end_NF"; tag "mRNA_end_NF";
+> 
+> trans <- c ("ENST00000298232", "ENST00000361285", "ENST00000342420", "ENST00000328758")
+> 
+> ################################################################################
+> 
+> ###CDS
+> cds <- readDNAStringSet (filepath = "Homo_sapiens.GRCh37.75.cds.all.fa", format="fasta", use.names=TRUE)
+> 
+> class (cds)
+[1] "DNAStringSet"
+attr(,"package")
+[1] "Biostrings"
+> cds
+  A DNAStringSet instance of length 104763
+          width seq                                         names               
+     [1]      8 GAAATAGT                                    ENST00000415118 c...
+     [2]      9 CCTTCCTAC                                   ENST00000434970 c...
+     [3]     13 ACTGGGGGATACG                               ENST00000448914 c...
+     [4]     23 GTGGATATAGTGTCTACGATTAC                     ENST00000604642 c...
+     [5]     21 NNTGACTATGGTGCTAACTAC                       ENST00000603326 c...
+     ...    ... ...
+[104759]    378 ATGGCCGACACCATCTTCGG...GCACCAAATGTGGGATCGAG ENST00000609219 c...
+[104760]    330 ATGGCCGACACCATCTTCGG...TCCTGGGCAGCTCGTCGGTG ENST00000609977 c...
+[104761]    264 ATGGCCGACACCATCTTCGG...CCATGAGGCGGAATGTGATG ENST00000609882 c...
+[104762]    249 ATGGCCGACACCATCTTCGG...TGGAGCGGCTGGAGACCATG ENST00000608961 c...
+[104763]    113 ATGGCCGACACCATCTTCGG...TCCGTGCACACCTACCAGAC ENST00000610077 c...
+> cds[1:3]
+  A DNAStringSet instance of length 3
+    width seq                                               names               
+[1]     8 GAAATAGT                                          ENST00000415118 c...
+[2]     9 CCTTCCTAC                                         ENST00000434970 c...
+[3]    13 ACTGGGGGATACG                                     ENST00000448914 c...
+> #cds[[1:3]]
+> cds[1:3,]
+  A DNAStringSet instance of length 3
+    width seq                                               names               
+[1]     8 GAAATAGT                                          ENST00000415118 c...
+[2]     9 CCTTCCTAC                                         ENST00000434970 c...
+[3]    13 ACTGGGGGATACG                                     ENST00000448914 c...
+> #cds[1:3,1:2]
+> 
+> ids0 <- names (cds)
+> class (ids0)
+[1] "character"
+> length (ids0)
+[1] 104763
+> ids0[1:3]
+[1] "ENST00000415118 cds:known chromosome:GRCh37:14:22907539:22907546:1 gene:ENSG00000223997 gene_biotype:TR_D_gene transcript_biotype:TR_D_gene"
+[2] "ENST00000434970 cds:known chromosome:GRCh37:14:22907999:22908007:1 gene:ENSG00000237235 gene_biotype:TR_D_gene transcript_biotype:TR_D_gene"
+[3] "ENST00000448914 cds:known chromosome:GRCh37:14:22918105:22918117:1 gene:ENSG00000228985 gene_biotype:TR_D_gene transcript_biotype:TR_D_gene"
+> 
+> chr21 <- grep (":GRCh37:21:", ids0)  ##MAS CORTO usamos este
+> length (chr21)
+[1] 934
+> 
+> chr22 <- grep (":GRCh37:22:", ids0)  ##MAS LARGO
+> length (chr22)
+[1] 2176
+> cds[chr22,]
+  A DNAStringSet instance of length 2176
+       width seq                                            names               
+   [1]   138 GACCCAGCCCAGCCACCCCGAG...AACAGGAGATCGACGACGTGA ENST00000435101 c...
+   [2]  1495 ATGGGGCTAGAAGCACTGGTGC...CTTTGTGCTGTGCCCCGCTAG ENST00000358097 c...
+   [3]  1552 ATGGGGCTAGAAGCACTGGTGC...CTTTGTGCTGTGCCCCGCTAG ENST00000433992 c...
+   [4]   127 CCCAGCAGGCTCCTGCTCCAGC...GGACCAAGGTCACCGTCCTAG ENST00000390320 c...
+   [5]   142 ATGCCACCAGGGCCACTGGCCC...GGACCAAGCTGACCGTCCTAG ENST00000390322 c...
+   ...   ... ...
+[2172]   306 ATGGCAGAAGACAAAACCAAAC...GCCTGCATCATGCAGACATAA ENST00000436958 c...
+[2173]   300 ATGGCAGAAGACAAAACCAAAC...GCCCACGCCTGCATCATGTGA ENST00000395590 c...
+[2174]   120 ATGGCAGAAGACAAAACCAAAC...AAATCCAAACACAACAATTAG ENST00000468451 c...
+[2175]    61 ATGGCAGAAGACAAAACCAAAC...GGAAGTATGATGCTGATGACA ENST00000413505 c...
+[2176]   687 ATGGCAGAAGACAAAACCAAAC...GCGGCCTCTCCCCACAGCTGA ENST00000435118 c...
+> 
+> 
+> ids1 <- strsplit (ids0, split = " ")
+> table (sapply (ids1, length))
+
+     6 
+104763 
+> ids <- sapply (ids1, function (x) x[1])
+> ids[1:3]
+[1] "ENST00000415118" "ENST00000434970" "ENST00000448914"
+> length (ids)
+[1] 104763
+> 
+> ################################################################################
+> 
+> touse <- ids %in% trans
+> table (touse, exclude = NULL)
+touse
+ FALSE   TRUE   <NA> 
+104759      4      0 
+> 
+> cds[touse,]
+  A DNAStringSet instance of length 4
+    width seq                                               names               
+[1]  1602 ATGAATGAAAGTCCTGATCCGAC...ATGTTGTAGCTGGATCCGATTAA ENST00000298232 c...
+[2]  1656 ATGAATGAAAGTCCTGATCCGAC...ATGTTGTAGCTGGATCCGATTAA ENST00000361285 c...
+[3]  1542 ATGAATGAAAGTCCTGATCCGAC...ATGTTGTAGCTGGATCCGATTAA ENST00000342420 c...
+[4]   392 ATGAATGAAAGTCCTGATCCGAC...CTTCTTCGAGTATTTGTAGAAAG ENST00000328758 c...
+> trans
+[1] "ENST00000298232" "ENST00000361285" "ENST00000342420" "ENST00000328758"
+> 
+> setwd ("/home/dmontaner/documentos/masterUV/mis_cursos/NOCIONES_BASICAS_2013_2014/clases/2014_14_practical_local_blast/datos")
+> writeXStringSet (cds[touse,], filepath = "mytranscripts.fa", append = FALSE, format = "fasta")
+> 
+> 
+> ###EXIT
+> warnings ()
+NULL
+> sessionInfo ()
+R version 3.0.2 (2013-09-25)
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=es_ES.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=es_ES.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=es_ES.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=es_ES.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] parallel  stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+[1] Biostrings_2.30.1  XVector_0.2.0      IRanges_1.20.6     BiocGenerics_0.8.0
+
+loaded via a namespace (and not attached):
+[1] stats4_3.0.2
+> q ("no")
+> proc.time()
+   user  system elapsed 
+  7.319   0.131   7.430 

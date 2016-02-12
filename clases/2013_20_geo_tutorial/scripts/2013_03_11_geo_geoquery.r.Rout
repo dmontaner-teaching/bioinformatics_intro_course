@@ -1,0 +1,330 @@
+
+R version 3.0.1 (2013-05-16) -- "Good Sport"
+Copyright (C) 2013 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> ##geo_geoquery.r
+> ##2013-03-03 dmontaner@cipf.es
+> ##GEOquery library example
+> 
+> ##Tested using GEOquery Version: "2.25.0"
+> 
+> ###Using data from GEO Series GSE37761
+> ## http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37761
+> 
+> 
+> ###Clear working environment and load library
+> rm (list = ls ())
+> library (GEOquery); packageDescription ("GEOquery", fields = "Version") #"2.25.0"
+Loading required package: Biobase
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:stats’:
+
+    xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, as.data.frame, cbind, colnames, duplicated, eval,
+    Filter, Find, get, intersect, lapply, Map, mapply, match, mget,
+    order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+    rbind, Reduce, rep.int, rownames, sapply, setdiff, sort, table,
+    tapply, union, unique, unlist
+
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+Setting options('download.file.method.GEOquery'='curl')
+[1] "2.26.1"
+> help (package = GEOquery)
+
+		Information on package ‘GEOquery’
+
+Description:
+
+Package:       GEOquery
+Type:          Package
+Title:         Get data from NCBI Gene Expression Omnibus (GEO)
+Version:       2.26.1
+Date:          2013-04-07
+Author:        Sean Davis <sdavis2@mail.nih.gov>
+Maintainer:    Sean Davis <sdavis2@mail.nih.gov>
+Depends:       methods, Biobase
+Imports:       XML, RCurl
+Suggests:      limma
+URL:           http://watson.nci.nih.gov/~sdavis
+biocViews:     Microarray, DataImport, OneChannel, TwoChannel, SAGE
+Description:   The NCBI Gene Expression Omnibus (GEO) is a public
+               repository of microarray data.  Given the rich and
+               varied nature of this resource, it is only natural to
+               want to apply BioConductor tools to these data.
+               GEOquery is the bridge between GEO and BioConductor.
+License:       GPL-2
+Packaged:      2013-04-09 04:32:13 UTC; biocbuild
+Built:         R 3.0.0; ; 2013-04-15 13:04:32 UTC; unix
+
+Index:
+
+GDS-class               Class "GDS"
+GDS2MA                  Convert a GDS data structure to a BioConductor
+                        data structure
+GEOData-class           Class "GEOData"
+GEODataTable-class      Class "GEODataTable"
+GPL-class               Class "GPL"
+GSE-class               Class "GSE"
+GSM-class               Class "GSM"
+dataTable               Generic functions for GEOquery
+getGEO                  Get a GEO object from NCBI or file
+getGEOSuppFiles         Get Supplemental Files from GEO
+getGEOfile              Download a file from GEO soft file to the local
+                        machine
+getGSEDataTables        Get GSE data tables from GEO into R data
+                        structures.
+gunzip                  Gunzip a file
+parseGEO                Parse GEO text
+
+Further information is available in the following vignettes in
+directory ‘/usr/local/lib/R/site-library/GEOquery/doc’:
+
+GEOquery: GEOquery (source, pdf)
+
+> 
+> 
+> ###Download the desired series
+> datos <- getGEO ("GSE37761")
+Found 1 file(s)
+GSE37761_series_matrix.txt.gz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0 6195k    0 13680    0     0   6417      0  0:16:28  0:00:02  0:16:26  6826  5 6195k    5  319k    0     0   105k      0  0:00:58  0:00:03  0:00:55  110k 20 6195k   20 1278k    0     0   314k      0  0:00:19  0:00:04  0:00:15  324k 36 6195k   36 2265k    0     0   452k      0  0:00:13  0:00:05  0:00:08  463k 52 6195k   52 3230k    0     0   535k      0  0:00:11  0:00:06  0:00:05  654k 66 6195k   66 4104k    0     0   585k      0  0:00:10  0:00:07  0:00:03  837k 81 6195k   81 5045k    0     0   629k      0  0:00:09  0:00:08  0:00:01  946k 96 6195k   96 6001k    0     0   665k      0  0:00:09  0:00:09 --:--:--  952k100 6195k  100 6195k    0     0   663k      0  0:00:09  0:00:09 --:--:--  908k
+File stored at: 
+/tmp/RtmpwRWOZ4/GPL6480.soft
+> 
+> ###Save so you don't need to download them again if the session is closed
+> save (datos, file = "geo_down.RData")
+> 
+> ###Use this if you need to reload the data again
+> ## rm (list = ls ())
+> ## load ("geo_down.RData")
+> 
+> 
+> ###The data are wrapped in a list
+> class (datos)
+[1] "list"
+> length (datos)
+[1] 1
+> names (datos)
+[1] "GSE37761_series_matrix.txt.gz"
+> 
+> ###Unwrap the list (get the first element)
+> datos <- datos[[1]]
+> class (datos)
+[1] "ExpressionSet"
+attr(,"package")
+[1] "Biobase"
+> datos
+ExpressionSet (storageMode: lockedEnvironment)
+assayData: 40736 features, 28 samples 
+  element names: exprs 
+protocolData: none
+phenoData
+  sampleNames: GSM927280 GSM927281 ... GSM927307 (28 total)
+  varLabels: title geo_accession ... data_row_count (39 total)
+  varMetadata: labelDescription
+featureData
+  featureNames: A_23_P100001 A_23_P100011 ... A_32_P99942 (40736 total)
+  fvarLabels: ID SPOT_ID ... SEQUENCE (17 total)
+  fvarMetadata: Column Description labelDescription
+experimentData: use 'experimentData(object)'
+Annotation: GPL6480 
+> 
+> 
+> ###Explore the ExpressionSet: Expression Values
+> expr <- exprs (datos)
+> class (expr)
+[1] "matrix"
+> dim (expr)
+[1] 40736    28
+> expr[1:3,1:5]
+             GSM927280 GSM927281 GSM927282 GSM927283 GSM927284
+A_23_P100001 11.814887 11.998061 10.785308 10.641970 10.563402
+A_23_P100011  7.232810  7.358751  7.418097  7.453790  8.842987
+A_23_P100022  6.450313  6.326721  6.609019  6.521098  7.193046
+> boxplot (expr, las = 3)
+> 
+> 
+> ###Explore the ExpressionSet: Gen Annotation (available information about genes)
+> fea <- fData (datos)
+> class (fea)
+[1] "data.frame"
+> dim (fea)
+[1] 40736    17
+> colnames (fea)
+ [1] "ID"                   "SPOT_ID"              "CONTROL_TYPE"        
+ [4] "REFSEQ"               "GB_ACC"               "GENE"                
+ [7] "GENE_SYMBOL"          "GENE_NAME"            "UNIGENE_ID"          
+[10] "ENSEMBL_ID"           "TIGR_ID"              "ACCESSION_STRING"    
+[13] "CHROMOSOMAL_LOCATION" "CYTOBAND"             "DESCRIPTION"         
+[16] "GO_ID"                "SEQUENCE"            
+> fea[1:3,]
+                       ID      SPOT_ID CONTROL_TYPE    REFSEQ    GB_ACC   GENE
+A_23_P100001 A_23_P100001 A_23_P100001        FALSE NM_207446 NM_207446 400451
+A_23_P100011 A_23_P100011 A_23_P100011        FALSE NM_005829 NM_005829  10239
+A_23_P100022 A_23_P100022 A_23_P100022        FALSE NM_014848 NM_014848   9899
+             GENE_SYMBOL                                          GENE_NAME
+A_23_P100001     FAM174B      family with sequence similarity 174, member B
+A_23_P100011       AP3S2 adaptor-related protein complex 3, sigma 2 subunit
+A_23_P100022        SV2B                   synaptic vesicle glycoprotein 2B
+             UNIGENE_ID      ENSEMBL_ID TIGR_ID
+A_23_P100001   Hs.27373 ENST00000557398    <NA>
+A_23_P100011  Hs.632161                    <NA>
+A_23_P100022   Hs.21754 ENST00000557410    <NA>
+                                                                      ACCESSION_STRING
+A_23_P100001 ref|NM_207446|ens|ENST00000557398|ens|ENST00000553393|ens|ENST00000327355
+A_23_P100011                ref|NM_005829|ref|NM_001199058|ref|NR_023361|ref|NR_037582
+A_23_P100022    ref|NM_014848|ref|NM_001167580|ens|ENST00000557410|ens|ENST00000330276
+                CHROMOSOMAL_LOCATION   CYTOBAND
+A_23_P100001 chr15:93160848-93160789 hs|15q26.1
+A_23_P100011 chr15:90378743-90378684 hs|15q26.1
+A_23_P100022 chr15:91838329-91838388 hs|15q26.1
+                                                                                                                 DESCRIPTION
+A_23_P100001                          Homo sapiens family with sequence similarity 174, member B (FAM174B), mRNA [NM_207446]
+A_23_P100011 Homo sapiens adaptor-related protein complex 3, sigma 2 subunit (AP3S2), transcript variant 1, mRNA [NM_005829]
+A_23_P100022                    Homo sapiens synaptic vesicle glycoprotein 2B (SV2B), transcript variant 1, mRNA [NM_014848]
+                                                                                                                                                                                                                                                                                                     GO_ID
+A_23_P100001                                                                                                                                                                                                                                         GO:0016020(membrane)|GO:0016021(integral to membrane)
+A_23_P100011               GO:0005794(Golgi apparatus)|GO:0006886(intracellular protein transport)|GO:0008565(protein transporter activity)|GO:0016020(membrane)|GO:0016192(vesicle-mediated transport)|GO:0030117(membrane coat)|GO:0030659(cytoplasmic vesicle membrane)|GO:0031410(cytoplasmic vesicle)
+A_23_P100022 GO:0001669(acrosomal vesicle)|GO:0006836(neurotransmitter transport)|GO:0016020(membrane)|GO:0016021(integral to membrane)|GO:0022857(transmembrane transporter activity)|GO:0030054(cell junction)|GO:0030672(synaptic vesicle membrane)|GO:0031410(cytoplasmic vesicle)|GO:0045202(synapse)
+                                                                 SEQUENCE
+A_23_P100001 ATCTCATGGAAAAGCTGGATTCCTCTGCCTTACGCAGAAACACCCGGGCTCCATCTGCCA
+A_23_P100011 TCAAGTATTGGCCTGACATAGAGTCCTTAAGACAAGCAAAGACAAGCAAGGCAAGCACGT
+A_23_P100022 ATGTCGGCTGTGGAGGGTTAAAGGGATGAGGCTTTCCTTTGTTTAGCAAATCTGTTCACA
+> table (rownames (fea) == rownames (expr))
+
+ TRUE 
+40736 
+> 
+> 
+> ###Explore the ExpressionSet: Sample Information
+> sinfo <- pData (datos)
+> class (sinfo)
+[1] "data.frame"
+> dim (sinfo)
+[1] 28 39
+> sinfo[1:3,1:5]
+             title geo_accession                status submission_date
+GSM927280 Control1     GSM927280 Public on May 05 2012     May 04 2012
+GSM927281 Control2     GSM927281 Public on May 05 2012     May 04 2012
+GSM927282  12h_1_1     GSM927282 Public on May 05 2012     May 04 2012
+          last_update_date
+GSM927280      May 05 2012
+GSM927281      May 05 2012
+GSM927282      May 05 2012
+> table (rownames (sinfo) == colnames (expr))
+
+TRUE 
+  28 
+> 
+> ################################################################################
+> 
+> 
+> ###READING Series Matrix File(s)
+> datos2 <- getGEO ("GSE17538")  ##usually gives an FTP response timeout error
+Found 2 file(s)
+GSE17538-GPL1261_series_matrix.txt.gz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0 1622k    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0 17 1622k   17  284k    0     0  90447      0  0:00:18  0:00:03  0:00:15 94390 96 1622k   96 1557k    0     0   370k      0  0:00:04  0:00:04 --:--:--  382k100 1622k  100 1622k    0     0   372k      0  0:00:04  0:00:04 --:--:--  405k
+File stored at: 
+/tmp/RtmpwRWOZ4/GPL1261.soft
+GSE17538-GPL570_series_matrix.txt.gz
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0  0 66.9M    0 28728    0     0  10309      0  1:53:26  0:00:02  1:53:24 12162  0 66.9M    0  638k    0     0   174k      0  0:06:32  0:00:03  0:06:29  197k  0 66.9M    0  654k    0     0  71475      0  0:16:21  0:00:09  0:16:12 74867  1 66.9M    1 1008k    0     0   103k      0  0:11:02  0:00:09  0:10:53  111k  1 66.9M    1 1024k    0     0  70264      0  0:16:38  0:00:14  0:16:24 79764  2 66.9M    2 1987k    0     0   125k      0  0:09:04  0:00:15  0:08:49  150k  4 66.9M    4 3104k    0     0   186k      0  0:06:07  0:00:16  0:05:51  189k  5 66.9M    5 3985k    0     0   225k      0  0:05:04  0:00:17  0:04:47  401k  6 66.9M    6 4790k    0     0   256k      0  0:04:26  0:00:18  0:04:08  424k  8 66.9M    8 5626k    0     0   286k      0  0:03:59  0:00:19  0:03:40  973k  9 66.9M    9 6503k    0     0   314k      0  0:03:37  0:00:20  0:03:17  925k 10 66.9M   10 7361k    0     0   339k      0  0:03:21  0:00:21  0:03:00  851k 11 66.9M   11 8206k    0     0   362k      0  0:03:09  0:00:22  0:02:47  846k 13 66.9M   13 9141k    0     0   386k      0  0:02:57  0:00:23  0:02:34  869k 14 66.9M   14  9.7M    0     0   405k      0  0:02:49  0:00:24  0:02:25  867k 15 66.9M   15 10.5M    0     0   422k      0  0:02:42  0:00:25  0:02:17  866k 17 66.9M   17 11.5M    0     0   444k      0  0:02:33  0:00:26  0:02:07  899k 18 66.9M   18 12.6M    0     0   467k      0  0:02:26  0:00:27  0:01:59  947k 20 66.9M   20 13.6M    0     0   487k      0  0:02:20  0:00:28  0:01:52  966k 21 66.9M   21 14.6M    0     0   506k      0  0:02:15  0:00:29  0:01:46 1010k 23 66.9M   23 15.6M    0     0   523k      0  0:02:11  0:00:30  0:01:41 1042k 25 66.9M   25 16.7M    0     0   542k      0  0:02:06  0:00:31  0:01:35 1060k 26 66.9M   26 18.0M    0     0   564k      0  0:02:01  0:00:32  0:01:29 1101k 28 66.9M   28 18.8M    0     0   574k      0  0:01:59  0:00:33  0:01:26 1068k 29 66.9M   29 19.6M    0     0   579k      0  0:01:58  0:00:34  0:01:24 1014k 30 66.9M   30 20.3M    0     0   585k      0  0:01:57  0:00:35  0:01:22  968k 31 66.9M   31 21.1M    0     0   591k      0  0:01:55  0:00:36  0:01:19  901k 32 66.9M   32 21.9M    0     0   596k      0  0:01:54  0:00:37  0:01:17  805k 33 66.9M   33 22.7M    0     0   602k      0  0:01:53  0:00:38  0:01:15  794k 35 66.9M   35 23.5M    0     0   609k      0  0:01:52  0:00:39  0:01:13  814k 36 66.9M   36 24.6M    0     0   620k      0  0:01:50  0:00:40  0:01:10  866k 38 66.9M   38 25.8M    0     0   635k      0  0:01:47  0:00:41  0:01:06  955k 40 66.9M   40 27.4M    0     0   658k      0  0:01:44  0:00:42  0:01:02 1122k 44 66.9M   44 29.4M    0     0   690k      0  0:01:39  0:00:43  0:00:56 1368k 47 66.9M   47 32.0M    0     0   734k      0  0:01:33  0:00:44  0:00:49 1726k 51 66.9M   51 34.2M    0     0   768k      0  0:01:29  0:00:45  0:00:44 1976k 54 66.9M   54 36.2M    0     0   792k      0  0:01:26  0:00:46  0:00:40 2082k 55 66.9M   55 37.0M    0     0   796k      0  0:01:26  0:00:47  0:00:39 1971k 56 66.9M   56 38.0M    0     0   800k      0  0:01:25  0:00:48  0:00:37 1759k 58 66.9M   58 39.0M    0     0   804k      0  0:01:25  0:00:49  0:00:36 1425k 59 66.9M   59 39.6M    0     0   801k      0  0:01:25  0:00:50  0:00:35 1101k 60 66.9M   60 40.3M    0     0   800k      0  0:01:25  0:00:51  0:00:34  870k 61 66.9M   61 41.1M    0     0   799k      0  0:01:25  0:00:52  0:00:33  834k 62 66.9M   62 41.9M    0     0   800k      0  0:01:25  0:00:53  0:00:32  804k 63 66.9M   63 42.7M    0     0   800k      0  0:01:25  0:00:54  0:00:31  760k 65 66.9M   65 43.5M    0     0   800k      0  0:01:25  0:00:55  0:00:30  795k 66 66.9M   66 44.3M    0     0   801k      0  0:01:25  0:00:56  0:00:29  816k 67 66.9M   67 45.3M    0     0   805k      0  0:01:25  0:00:57  0:00:28  863k 69 66.9M   69 46.5M    0     0   812k      0  0:01:24  0:00:58  0:00:26  936k 71 66.9M   71 48.0M    0     0   823k      0  0:01:23  0:00:59  0:00:24 1078k 74 66.9M   74 49.7M    0     0   840k      0  0:01:21  0:01:00  0:00:21 1280k 76 66.9M   76 51.3M    0     0   852k      0  0:01:20  0:01:01  0:00:19 1427k 79 66.9M   79 53.0M    0     0   866k      0  0:01:19  0:01:02  0:00:17 1571k 81 66.9M   81 54.4M    0     0   876k      0  0:01:18  0:01:03  0:00:15 1634k 83 66.9M   83 55.8M    0     0   884k      0  0:01:17  0:01:04  0:00:13 1614k 85 66.9M   85 57.4M    0     0   895k      0  0:01:16  0:01:05  0:00:11 1560k 88 66.9M   88 58.9M    0     0   905k      0  0:01:15  0:01:06  0:00:09 1557k 90 66.9M   90 60.4M    0     0   914k      0  0:01:14  0:01:07  0:00:07 1520k 92 66.9M   92 61.9M    0     0   924k      0  0:01:14  0:01:08  0:00:06 1531k 94 66.9M   94 63.4M    0     0   932k      0  0:01:13  0:01:09  0:00:04 1557k 97 66.9M   97 65.0M    0     0   941k      0  0:01:12  0:01:10  0:00:02 1533k 99 66.9M   99 66.3M    0     0   948k      0  0:01:12  0:01:11  0:00:01 1527k100 66.9M  100 66.9M    0     0   949k      0  0:01:12  0:01:12 --:--:-- 1482k
+File stored at: 
+/tmp/RtmpwRWOZ4/GPL570.soft
+> 
+> ###Download data form:
+> ## http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE17538
+> ## wget ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE17nnn/GSE17538/matrix/GSE17538-GPL570_series_matrix.txt.gz
+> ## gunzip GSE17538-GPL570_series_matrix.txt.gz
+> 
+> ## wc -l GSE17538-GPL570_series_matrix.txt
+> ## grep "^\!" GSE17538-GPL570_series_matrix.txt | wc -l
+> 
+> 
+> ###read.table CAN BE USED is slow.
+> datos2 <- read.table (file = "GSE17538-GPL570_series_matrix.txt", header = TRUE, sep = "\t", comment.char = "!", quote = "\"", as.is = TRUE)
+> class (datos2)
+[1] "data.frame"
+> dim (datos2)
+[1] 54675   239
+> datos2[1:3, 1:5]
+     ID_REF GSM437093 GSM437094 GSM437095 GSM437096
+1 1007_s_at 11.658060 11.627632 11.209226 11.770620
+2   1053_at  8.845589  8.625595  8.234096  8.727833
+3    117_at  7.450960  7.342564  8.122719  7.285359
+> 
+> 
+> rownames (datos2) <- datos2[,1]
+> datos2 <- datos2[,-1]
+> dim (datos2)
+[1] 54675   238
+> 
+> boxplot (datos2)
+> 
+> 
+> ###EXIT
+> warnings ()
+NULL
+> sessionInfo ()
+R version 3.0.1 (2013-05-16)
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=C                 LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] parallel  stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+[1] GEOquery_2.26.1    Biobase_2.20.0     BiocGenerics_0.6.0
+
+loaded via a namespace (and not attached):
+[1] RCurl_1.95-4.1 XML_3.96-1.1  
+> q ("no")
+> proc.time()
+   user  system elapsed 
+502.243   8.028 740.309 
