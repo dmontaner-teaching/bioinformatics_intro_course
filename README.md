@@ -1,3 +1,4 @@
-# bioinformatics_intro_course
+# Nociones Básicas de Bioinformática y Genómica
 
-Some materials from the course __Nociones Básicas de Bioinformática y Genómica__ I taught at the University of Valencia
+Some materials from the Bioinformatics introductory course I taught at Valencia University
+[Master's Degree in Bioinformatics](http://www.uv.es/uvweb/master-bioinformatica/es/master-universitario-bioinformatica-1285885000618.html)
